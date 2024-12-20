@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:story_app/db/auth_repository.dart';
+import 'package:story_app/provider/aut_provider.dart';
 import 'package:story_app/routes/router_delegate.dart';
 
 void main() {
@@ -14,11 +16,15 @@ class StoryApp extends StatefulWidget {
 
 class _StoryAppState extends State<StoryApp> {
   late MyRouterDelegate myRouterDelegate;
+  late AuthProvider authProvider;
 
   @override
   void initState() {
     super.initState();
-    myRouterDelegate = MyRouterDelegate();
+    final authRepository = AuthRepository();
+
+    authProvider = AuthProvider(authRepository);
+    myRouterDelegate = MyRouterDelegate(authRepository);
   }
 
   @override
