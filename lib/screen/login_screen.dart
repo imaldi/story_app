@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/model/user.dart';
-import 'package:story_app/provider/aut_provider.dart';
+import 'package:story_app/provider/auth_provider.dart';
 
 /// todo 14: create LoginScreen
 class LoginScreen extends StatefulWidget {

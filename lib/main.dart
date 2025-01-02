@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:story_app/db/auth_repository.dart';
-import 'package:story_app/provider/aut_provider.dart';
+import 'package:story_app/provider/auth_provider.dart';
 import 'package:story_app/routes/router_delegate.dart';
 
 void main() {
@@ -48,7 +48,6 @@ class _StoryAppState extends State<StoryApp> {
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
 
   final String title;
 

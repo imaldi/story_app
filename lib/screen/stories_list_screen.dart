@@ -3,7 +3,7 @@ import 'package:story_app/model/story.dart';
 
 
 class StoriesListScreen extends StatelessWidget {
-  final List<Story> stories;
+  final List<StoryDummy> stories;
   final Function(String) onTapped;
 
   const StoriesListScreen({
