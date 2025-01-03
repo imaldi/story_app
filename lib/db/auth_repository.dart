@@ -37,6 +37,20 @@ class AuthRepository {
     return preferences.setBool(stateKey, false);
   }
 
+  Future<bool> register(User user) async {
+    try{
+      // call auth service here
+      var successRegister = await authApiServices.register(user);
+      if(successRegister) {
+        return true;
+      }
+      return false;
+    } catch(e) {
+      throw Exception("Failure login: $e");
+    }
+
+  }
+
   // save info user
 
   Future<bool> saveUser(User user) async {

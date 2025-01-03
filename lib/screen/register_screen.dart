@@ -85,7 +85,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       );
                       final authRead = context.read<AuthProvider>();
 
-                      final result = await authRead.saveUser(user);
+                      final result = await authRead.register(user);
                       if (result) widget.onRegister();
                     }
                   },

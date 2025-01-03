@@ -8,6 +8,29 @@ import 'package:story_app/model/user.dart';
 import 'package:http/http.dart' as http;
 
 class AuthApiServices {
+  Future<bool> register(User user) async {
+    try{
+      var body = {
+        "name": user.name,
+        "email": user.email,
+        "password": user.password
+      };
+      final response = await http.post(
+        Uri.parse("$baseUrl/register"),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode(body)
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        throw Exception('Failed to load restaurant list');
+      }
+    } catch (e) {
+      print("Error getting list of stories: $e");
+      rethrow;
+    }
+  }
   Future<User> login(User user) async {
     try{
       var body = {

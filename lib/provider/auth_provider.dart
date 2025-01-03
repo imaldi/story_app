@@ -34,10 +34,10 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
     return !isLoggedIn;
   }
-  Future<bool> saveUser(User user) async {
+  Future<bool> register(User user) async {
     isLoadingRegister = true;
     notifyListeners();
-    final userState = await authRepository.saveUser(user);
+    final userState = await authRepository.register(user);
     isLoadingRegister = false;
     notifyListeners();
     return userState;
