@@ -1,7 +1,13 @@
+import 'package:story_app/model/user.dart';
+import 'package:json_annotation/json_annotation.dart';
+
+part 'login_response.g.dart';
+
+@JsonSerializable()
 class LoginResponse {
   final bool? error;
   final String? message;
-  final LoginResult? loginResult;
+  final User? loginResult;
 
   LoginResponse({
     this.error,
@@ -12,34 +18,15 @@ class LoginResponse {
   LoginResponse copyWith({
     bool? error,
     String? message,
-    LoginResult? loginResult,
+    User? loginResult,
   }) =>
       LoginResponse(
         error: error ?? this.error,
         message: message ?? this.message,
         loginResult: loginResult ?? this.loginResult,
       );
-}
 
-class LoginResult {
-  final String? userId;
-  final String? name;
-  final String? token;
+  factory LoginResponse.fromJson(Map<String, dynamic> json) => _$LoginResponseFromJson(json);
 
-  LoginResult({
-    this.userId,
-    this.name,
-    this.token,
-  });
-
-  LoginResult copyWith({
-    String? userId,
-    String? name,
-    String? token,
-  }) =>
-      LoginResult(
-        userId: userId ?? this.userId,
-        name: name ?? this.name,
-        token: token ?? this.token,
-      );
+  Map<String, dynamic> toJson() => _$LoginResponseToJson(this);
 }

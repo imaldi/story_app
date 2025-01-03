@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:story_app/api/auth_api_service.dart';
 import 'package:story_app/db/auth_repository.dart';
 import 'package:story_app/provider/auth_provider.dart';
 import 'package:story_app/routes/router_delegate.dart';
@@ -21,7 +22,7 @@ class _StoryAppState extends State<StoryApp> {
   @override
   void initState() {
     super.initState();
-    final authRepository = AuthRepository();
+    final authRepository = AuthRepository(AuthApiServices());
 
     authProvider = AuthProvider(authRepository);
     myRouterDelegate = MyRouterDelegate(authRepository);

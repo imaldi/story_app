@@ -14,10 +14,9 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> login(User user) async {
     isLoadingLogin = true;
     notifyListeners();
-    final userState = await authRepository.getUser();
-    if (user == userState) {
-      await authRepository.login();
-    }
+
+    await authRepository.login(user);
+
     isLoggedIn = await authRepository.isLoggedIn();
     isLoadingLogin = false;
     notifyListeners();

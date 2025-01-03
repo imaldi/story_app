@@ -1,9 +1,14 @@
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:story_app/api/auth_api_service.dart';
 import 'package:story_app/model/user.dart';
 
 class AuthRepository {
   final String stateKey = "state";
   final String userKey = "user";
+  final AuthApiServices authApiServices;
+  AuthRepository(this.authApiServices);
 
   Future<bool> isLoggedIn() async {
     final preferences = await SharedPreferences.getInstance();
@@ -11,10 +16,19 @@ class AuthRepository {
     return preferences.getBool(stateKey) ?? false;
   }
 
-  Future<bool> login() async {
-    final preferences = await SharedPreferences.getInstance();
-    await Future.delayed(const Duration(seconds: 2));
-    return preferences.setBool(stateKey, true);
+
+  Future<bool> login(User user) async {
+    try{
+      // call auth service here
+      var userResult = await authApiServices.login(user);
+
+      final preferences = await SharedPreferences.getInstance();
+      await Future.delayed(const Duration(seconds: 2));
+      saveUser(userResult);
+      return preferences.setBool(stateKey, true);
+    } catch(e) {
+      throw Exception("Failure login: $e");
+    }
   }
 
   Future<bool> logout() async {
@@ -28,7 +42,7 @@ class AuthRepository {
   Future<bool> saveUser(User user) async {
     final preferences = await SharedPreferences.getInstance();
     await Future.delayed(const Duration(seconds: 2));
-    return preferences.setString(userKey, user.toJson());
+    return preferences.setString(userKey, jsonEncode(user.toJson()));
   }
   Future<bool> deleteUser() async {
     final preferences = await SharedPreferences.getInstance();
@@ -41,7 +55,7 @@ class AuthRepository {
     final json = preferences.getString(userKey) ?? "";
     User? user;
     try {
-      user = User.fromJson(json);
+      user = User.fromJson(jsonDecode(json));
     } catch (e) {
       user = null;
     }

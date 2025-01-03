@@ -1,41 +1,53 @@
 import 'dart:convert';
 
-class User {
-  String? email;
-  String? password;
+import 'package:equatable/equatable.dart';
+import 'package:json_annotation/json_annotation.dart';
+
+part 'user.g.dart';
+
+@JsonSerializable()
+class User extends Equatable {
+  final String? userId;
+  final String? name;
+  final String? token;
+  final String? email;
+  final String? password;
 
   User({
+    this.userId,
+    this.name,
+    this.token,
     this.email,
     this.password,
   });
 
   @override
-  String toString() => 'User(email: $email, password: $password)';
+  // TODO: implement props
+  List<Object?> get props => [
+    userId,
+    name,
+    token,
+    email,
+    password
+  ];
 
-  Map<String, dynamic> toMap() {
-    return {
-      'email': email,
-      'password': password,
-    };
-  }
-  factory User.fromMap(Map<String, dynamic> map) {
-    return User(
-      email: map['email'],
-      password: map['password'],
-    );
-  }
-  String toJson() => json.encode(toMap());
-  factory User.fromJson(String source) => User.fromMap(json.decode(source));
+  User copyWith({
+    String? userId,
+    String? name,
+    String? token,
+    String? email,
+    String? password,
+  }) =>
+      User(
+        userId: userId ?? this.userId,
+        name: name ?? this.name,
+        token: token ?? this.token,
+        email: email ?? this.email,
+        password: password ?? this.password,
+      );
 
-  //   equality override
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
 
-    return other is User &&
-        other.email == email &&
-        other.password == password;
-  }
-  @override
-  int get hashCode => Object.hash(email, password);
+  factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
+
+  Map<String, dynamic> toJson() => _$UserToJson(this);
 }
