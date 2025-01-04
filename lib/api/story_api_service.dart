@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:story_app/core/consts/consts.dart';
 import 'package:story_app/model/story_response.dart';
 
-class ApiServices {
+class StoryApiServices {
   Future<StoryListResponse> getStoryList() async {
     try{
       // Get Bearer Token from SharedPreferences
@@ -30,7 +30,7 @@ class ApiServices {
     }
   }
 
-  Future<Story> getStoryDetail(String id) async {
+  Future<StoryDetailResponse> getStoryDetail(String id) async {
     try{
       // Get Bearer Token from SharedPreferences
       final prefs = await SharedPreferences.getInstance();
@@ -47,7 +47,7 @@ class ApiServices {
       );
 
       if (response.statusCode == 200) {
-        return StoryDetailResponse.fromJson(jsonDecode(response.body)).story ?? Story();
+        return StoryDetailResponse.fromJson(jsonDecode(response.body));
       } else {
         throw Exception('Failed to load restaurant detail');
       }
@@ -57,9 +57,10 @@ class ApiServices {
     }
   }
 
-  Future<void> addNewStory({
+  Future<StoryDetailResponse> addNewStory({
     required String description,
-    required File photo,
+    // TODO nanti akalin gimana bisa dapat filenya dari sini
+    required String photoPath,
     double? lat,
     double? lon,
   }) async {
@@ -69,6 +70,14 @@ class ApiServices {
       // Get Bearer Token from SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString(tokenKey);
+
+      // Check is photo file exist to upload
+      final file = File(photoPath);
+
+      // Ensure the file exists
+      if (!file.existsSync()) {
+        throw Exception('File does not exist at path: $photoPath');
+      }
 
       // Create Multipart Request
       final request = http.MultipartRequest('POST', Uri.parse(endpoint));
@@ -86,8 +95,8 @@ class ApiServices {
       request.files.add(
         await http.MultipartFile.fromPath(
           'photo',
-          photo.path,
-          filename: photo.path.split('/').last,
+          photoPath,
+          filename: photoPath.split('/').last,
         ),
       );
 
@@ -99,6 +108,7 @@ class ApiServices {
 
       if (response.statusCode == 200) {
         print("Story uploaded successfully");
+        return StoryDetailResponse(message: "Success Add Story");
       } else {
         throw Exception('Failed to upload story: ${response.body}');
       }
@@ -107,9 +117,10 @@ class ApiServices {
       rethrow;
     }
   }
+
   Future<void> addNewStoryAsGuest({
     required String description,
-    required File photo,
+    required String photoPath,
     double? lat,
     double? lon,
   }) async {
@@ -118,6 +129,15 @@ class ApiServices {
     try {
       // Create Multipart Request
       final request = http.MultipartRequest('POST', Uri.parse(endpoint));
+
+
+      // Check is photo file exist to upload
+      final file = File(photoPath);
+
+      // Ensure the file exists
+      if (!file.existsSync()) {
+        throw Exception('File does not exist at path: $photoPath');
+      }
 
       // Add fields to request
       request.fields['description'] = description;
@@ -129,8 +149,8 @@ class ApiServices {
       request.files.add(
         await http.MultipartFile.fromPath(
           'photo',
-          photo.path,
-          filename: photo.path.split('/').last,
+          photoPath,
+          filename: photoPath.split('/').last,
         ),
       );
 

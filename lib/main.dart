@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:story_app/api/auth_api_service.dart';
+import 'package:story_app/api/story_api_service.dart';
 import 'package:story_app/db/auth_repository.dart';
 import 'package:story_app/provider/auth_provider.dart';
+import 'package:story_app/provider/story_provider.dart';
 import 'package:story_app/routes/router_delegate.dart';
 
 void main() {
-  runApp(const StoryApp());
+  runApp(MultiProvider(
+    providers: [
+      Provider(create: (context)=>AuthProvider(AuthRepository(AuthApiServices()))),
+      Provider(create: (context)=>StoryListProvider(StoryApiServices()))
+    ],
+    child: const StoryApp()));
 }
 
 class StoryApp extends StatefulWidget {
