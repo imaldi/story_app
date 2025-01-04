@@ -2,11 +2,11 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:story_app/api/auth_api_service.dart';
+import 'package:story_app/core/consts/consts.dart';
 import 'package:story_app/model/user.dart';
 
 class AuthRepository {
-  final String stateKey = "state";
-  final String userKey = "user";
+
   final AuthApiServices authApiServices;
   AuthRepository(this.authApiServices);
 
@@ -24,7 +24,8 @@ class AuthRepository {
 
       final preferences = await SharedPreferences.getInstance();
       await Future.delayed(const Duration(seconds: 2));
-      saveUser(userResult);
+      preferences.setString(userKey, jsonEncode(userResult.toJson()));
+      preferences.setString(tokenKey, jsonEncode(userResult.token));
       return preferences.setBool(stateKey, true);
     } catch(e) {
       throw Exception("Failure login: $e");
@@ -51,13 +52,6 @@ class AuthRepository {
 
   }
 
-  // save info user
-
-  Future<bool> saveUser(User user) async {
-    final preferences = await SharedPreferences.getInstance();
-    await Future.delayed(const Duration(seconds: 2));
-    return preferences.setString(userKey, jsonEncode(user.toJson()));
-  }
   Future<bool> deleteUser() async {
     final preferences = await SharedPreferences.getInstance();
     await Future.delayed(const Duration(seconds: 2));

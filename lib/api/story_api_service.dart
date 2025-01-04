@@ -7,11 +7,11 @@ import 'package:story_app/core/consts/consts.dart';
 import 'package:story_app/model/story_response.dart';
 
 class ApiServices {
-  Future<List<Story>> getStoryList() async {
+  Future<StoryListResponse> getStoryList() async {
     try{
       // Get Bearer Token from SharedPreferences
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
+      final token = prefs.getString(tokenKey);
 
       if (token == null) {
         throw Exception("Authentication token is missing");
@@ -20,7 +20,7 @@ class ApiServices {
       final response = await http.get(Uri.parse("$baseUrl/list"));
 
       if (response.statusCode == 200) {
-        return StoryListResponse.fromJson(jsonDecode(response.body)).listStory ?? [];
+        return StoryListResponse.fromJson(jsonDecode(response.body));
       } else {
         throw Exception('Failed to load restaurant list');
       }
@@ -34,7 +34,7 @@ class ApiServices {
     try{
       // Get Bearer Token from SharedPreferences
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
+      final token = prefs.getString(tokenKey);
 
       if (token == null) {
         throw Exception("Authentication token is missing");
@@ -68,7 +68,7 @@ class ApiServices {
     try {
       // Get Bearer Token from SharedPreferences
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
+      final token = prefs.getString(tokenKey);
 
       // Create Multipart Request
       final request = http.MultipartRequest('POST', Uri.parse(endpoint));
