@@ -17,7 +17,7 @@ class StoryApiServices {
         throw Exception("Authentication token is missing");
       }
 
-      final response = await http.get(Uri.parse("$baseUrl/list"));
+      final response = await http.get(Uri.https(baseUrl,"$v1Path/list"));
 
       if (response.statusCode == 200) {
         return StoryListResponse.fromJson(jsonDecode(response.body));
@@ -40,7 +40,7 @@ class StoryApiServices {
         throw Exception("Authentication token is missing");
       }
 
-      final response = await http.get(Uri.parse("$baseUrl/detail/$id",),
+      final response = await http.get(Uri.https(baseUrl,"$v1Path/detail/$id"),
         headers: {
           'Authorization': 'Bearer $token',
         },

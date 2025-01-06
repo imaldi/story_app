@@ -38,7 +38,7 @@ class AuthApiServices {
         "password": user.password
       };
       final response = await http.post(
-        Uri.parse("$baseUrl/login"),
+        Uri.https(baseUrl,"$v1Path/login"),
         headers: {"Content-Type": "application/json"},
         body: json.encode(body)
       );

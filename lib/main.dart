@@ -13,9 +13,9 @@ void main() {
   runApp(MultiProvider(
     providers: [
       ChangeNotifierProvider(create: (context)=>AuthProvider(AuthRepository(AuthApiServices()))),
-      Provider(create: (context)=>StoryListProvider(StoryApiServices())),
-      Provider(create: (context)=>StoryDetailProvider(StoryApiServices())),
-      Provider(create: (context)=>AddStoryProvider(StoryApiServices())),
+      ChangeNotifierProvider(create: (context)=>StoryListProvider(StoryApiServices())),
+      ChangeNotifierProvider(create: (context)=>StoryDetailProvider(StoryApiServices())),
+      ChangeNotifierProvider(create: (context)=>AddStoryProvider(StoryApiServices())),
     ],
     child: const StoryApp()));
 }
