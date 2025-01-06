@@ -3,15 +3,19 @@ import 'package:provider/provider.dart';
 import 'package:story_app/api/auth_api_service.dart';
 import 'package:story_app/api/story_api_service.dart';
 import 'package:story_app/db/auth_repository.dart';
+import 'package:story_app/provider/add_story_provider.dart';
 import 'package:story_app/provider/auth_provider.dart';
+import 'package:story_app/provider/story_detail_provider.dart';
 import 'package:story_app/provider/story_list_provider.dart';
 import 'package:story_app/routes/router_delegate.dart';
 
 void main() {
   runApp(MultiProvider(
     providers: [
-      Provider(create: (context)=>AuthProvider(AuthRepository(AuthApiServices()))),
-      Provider(create: (context)=>StoryListProvider(StoryApiServices()))
+      ChangeNotifierProvider(create: (context)=>AuthProvider(AuthRepository(AuthApiServices()))),
+      Provider(create: (context)=>StoryListProvider(StoryApiServices())),
+      Provider(create: (context)=>StoryDetailProvider(StoryApiServices())),
+      Provider(create: (context)=>AddStoryProvider(StoryApiServices())),
     ],
     child: const StoryApp()));
 }
@@ -25,14 +29,12 @@ class StoryApp extends StatefulWidget {
 
 class _StoryAppState extends State<StoryApp> {
   late MyRouterDelegate myRouterDelegate;
-  late AuthProvider authProvider;
 
   @override
   void initState() {
     super.initState();
     final authRepository = AuthRepository(AuthApiServices());
 
-    authProvider = AuthProvider(authRepository);
     myRouterDelegate = MyRouterDelegate(authRepository);
   }
 
