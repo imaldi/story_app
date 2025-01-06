@@ -1,13 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:story_app/model/story_response.dart';
 
-class BodyOfDetailScreenWidget extends StatelessWidget {
+class BodyOfDetailScreenWidget extends StatefulWidget {
   const BodyOfDetailScreenWidget({
     super.key,
     required this.story,
   });
 
   final Story story;
+
+  @override
+  State<BodyOfDetailScreenWidget> createState() => _BodyOfDetailScreenWidgetState();
+}
+
+class _BodyOfDetailScreenWidgetState extends State<BodyOfDetailScreenWidget> {
+  @override
+  void initState() {
+    print("Image Url: ${widget.story.photoUrl}");
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,8 +28,16 @@ class BodyOfDetailScreenWidget extends StatelessWidget {
         child: Column(
           children: [
             Image.network(
-              story.photoUrl ?? "",
+              widget.story.photoUrl ?? "",
               fit: BoxFit.cover,
+              errorBuilder: (context, object, stacTrace){
+                return Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Icon(Icons.broken_image),
+                      Text("The image is not found"),
+                    ]);
+              },
             ),
             const SizedBox.square(dimension: 16),
             Row(
@@ -30,11 +49,11 @@ class BodyOfDetailScreenWidget extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        story.name ?? "",
+                        widget.story.name ?? "",
                         style: Theme.of(context).textTheme.headlineLarge,
                       ),
                       Text(
-                        story.createdAt.toString() ?? "",
+                        widget.story.createdAt.toString() ?? "",
                         style: Theme.of(context)
                             .textTheme
                             .labelLarge
@@ -60,7 +79,7 @@ class BodyOfDetailScreenWidget extends StatelessWidget {
             ),
             const SizedBox.square(dimension: 16),
             Text(
-              story.description ?? "",
+              widget.story.description ?? "",
               style: Theme.of(context).textTheme.bodyLarge,
             ),
           ],

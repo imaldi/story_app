@@ -6,7 +6,7 @@ import 'package:story_app/static/story_detail_result_state.dart';
 
 import '../model/story.dart';
 
-class StoryDetailsScreen extends StatelessWidget {
+class StoryDetailsScreen extends StatefulWidget {
   final String storyId;
 
   const StoryDetailsScreen({
@@ -15,12 +15,24 @@ class StoryDetailsScreen extends StatelessWidget {
   });
 
   @override
+  State<StoryDetailsScreen> createState() => _StoryDetailsScreenState();
+}
+
+class _StoryDetailsScreenState extends State<StoryDetailsScreen> {
+  @override
+  void initState() {
+    Future.microtask(() {
+      context.read<StoryDetailProvider>().fetchStoryDetail(widget.storyId);
+    });
+    super.initState();
+  }
+  @override
   Widget build(BuildContext context) {
-    final story = stories.singleWhere((element) => element.id == storyId);
+    // final story = stories.singleWhere((element) => element.id == widget.storyId);
     return Scaffold(
-      appBar: AppBar(
-        title: Text(story.author),
-      ),
+      // appBar: AppBar(
+      //   title: Text(story.author),
+      // ),
       body: Consumer<StoryDetailProvider>(
         builder: (context, value, child) {
 

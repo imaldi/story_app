@@ -69,8 +69,8 @@ class MyRouterDelegate extends RouterDelegate
       key: const ValueKey("QuotesListPage"),
       child: StoriesListScreen(
         stories: stories,
-        onTapped: (String quoteId) {
-          selectedStory = quoteId;
+        onTapped: (String storyId) {
+          selectedStory = storyId;
           notifyListeners();
         },
       ),

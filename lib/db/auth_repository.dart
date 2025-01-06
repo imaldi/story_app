@@ -25,7 +25,7 @@ class AuthRepository {
       final preferences = await SharedPreferences.getInstance();
       await Future.delayed(const Duration(seconds: 2));
       preferences.setString(userKey, jsonEncode(userResult.toJson()));
-      preferences.setString(tokenKey, jsonEncode(userResult.token));
+      preferences.setString(tokenKey, userResult.token ?? "");
       return preferences.setBool(stateKey, true);
     } catch(e) {
       throw Exception("Failure login: $e");

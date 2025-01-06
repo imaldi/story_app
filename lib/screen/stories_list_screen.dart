@@ -29,34 +29,33 @@ class _StoriesListScreenState extends State<StoriesListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Quotes App"),
-      ),
-      body: Consumer<StoryListProvider>(
-        builder: (context, value, child) {
-          return switch (value.resultListState) {
-            StoryListLoadingState() => const Center(
-                child: CircularProgressIndicator(),
-              ),
-            StoryListLoadedState(data: var storyList) => ListView(
-                children: [
-                  for (var story in storyList)
-                    ListTile(
-                      title: Text(story.name ?? ""),
-                      subtitle: Text(story.description ?? ""),
-                      isThreeLine: true,
-                      onTap: () => widget.onTapped(story.id ?? ""),
-                    )
-                ],
-              ),
-            StoryListErrorState(error: var message) => Center(
-                child: Text(message),
-              ),
-            _ => const SizedBox(),
-          };
-        },
-      ),
+    return Consumer<StoryListProvider>(
+      builder: (context, value, child) {
+        return Scaffold(
+            appBar: AppBar(
+              title: const Text("Quotes App"),
+            ),
+            body: switch (value.resultListState) {
+              StoryListLoadingState() => const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              StoryListLoadedState(data: var storyList) => ListView(
+                  children: [
+                    for (var story in storyList)
+                      ListTile(
+                        title: Text(story.name ?? ""),
+                        subtitle: Text(story.description ?? ""),
+                        isThreeLine: true,
+                        onTap: () => widget.onTapped(story.id ?? ""),
+                      )
+                  ],
+                ),
+              StoryListErrorState(error: var message) => Center(
+                  child: Text(message),
+                ),
+              _ => const SizedBox(),
+            });
+      },
     );
   }
 }

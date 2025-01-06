@@ -26,6 +26,7 @@ class StoryDetailProvider extends ChangeNotifier {
         _resultDetailState = StoryDetailErrorState(result.message ?? "");
         notifyListeners();
       } else {
+        print("story detail result: ${result.story}");
         _resultDetailState = StoryDetailLoadedState(result.story ?? Story());
         notifyListeners();
       }
