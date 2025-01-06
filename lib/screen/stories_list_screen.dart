@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/model/story.dart';
-import 'package:story_app/provider/story_provider.dart';
+import 'package:story_app/provider/story_list_provider.dart';
 import 'package:story_app/static/story_list_result_state.dart';
 
 class StoriesListScreen extends StatefulWidget {
