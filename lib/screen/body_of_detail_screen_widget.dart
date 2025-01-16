@@ -10,7 +10,8 @@ class BodyOfDetailScreenWidget extends StatefulWidget {
   final Story story;
 
   @override
-  State<BodyOfDetailScreenWidget> createState() => _BodyOfDetailScreenWidgetState();
+  State<BodyOfDetailScreenWidget> createState() =>
+      _BodyOfDetailScreenWidgetState();
 }
 
 class _BodyOfDetailScreenWidgetState extends State<BodyOfDetailScreenWidget> {
@@ -26,18 +27,21 @@ class _BodyOfDetailScreenWidgetState extends State<BodyOfDetailScreenWidget> {
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.network(
-              widget.story.photoUrl ?? "",
-              fit: BoxFit.cover,
-              errorBuilder: (context, object, stacTrace){
-                return Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Icon(Icons.broken_image),
-                      Text("The image is not found"),
-                    ]);
-              },
+            Center(
+              child: Image.network(
+                widget.story.photoUrl ?? "",
+                fit: BoxFit.cover,
+                errorBuilder: (context, object, stacTrace) {
+                  return Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Icon(Icons.broken_image),
+                        Text("The image is not found"),
+                      ]);
+                },
+              ),
             ),
             const SizedBox.square(dimension: 16),
             Row(
@@ -53,7 +57,8 @@ class _BodyOfDetailScreenWidgetState extends State<BodyOfDetailScreenWidget> {
                         style: Theme.of(context).textTheme.headlineLarge,
                       ),
                       Text(
-                        widget.story.createdAt.toString() ?? "",
+                        ("Created at: ${widget.story.createdAt ?? '-'}")
+                            .toString(),
                         style: Theme.of(context)
                             .textTheme
                             .labelLarge

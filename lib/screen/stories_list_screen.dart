@@ -7,11 +7,13 @@ import 'package:story_app/static/story_list_result_state.dart';
 class StoriesListScreen extends StatefulWidget {
   final List<StoryDummy> stories;
   final Function(String) onTapped;
+  final Function() onFabTapped;
 
   const StoriesListScreen({
     Key? key,
     required this.stories,
     required this.onTapped,
+    required this.onFabTapped,
   }) : super(key: key);
 
   @override
@@ -32,29 +34,32 @@ class _StoriesListScreenState extends State<StoriesListScreen> {
     return Consumer<StoryListProvider>(
       builder: (context, value, child) {
         return Scaffold(
-            appBar: AppBar(
-              title: const Text("Quotes App"),
-            ),
-            body: switch (value.resultListState) {
-              StoryListLoadingState() => const Center(
-                  child: CircularProgressIndicator(),
-                ),
-              StoryListLoadedState(data: var storyList) => ListView(
-                  children: [
-                    for (var story in storyList)
-                      ListTile(
-                        title: Text(story.name ?? ""),
-                        subtitle: Text(story.description ?? ""),
-                        isThreeLine: true,
-                        onTap: () => widget.onTapped(story.id ?? ""),
-                      )
-                  ],
-                ),
-              StoryListErrorState(error: var message) => Center(
-                  child: Text(message),
-                ),
-              _ => const SizedBox(),
-            });
+          appBar: AppBar(
+            title: const Text("Story App"),
+          ),
+          body: switch (value.resultListState) {
+            StoryListLoadingState() => const Center(
+                child: CircularProgressIndicator(),
+              ),
+            StoryListLoadedState(data: var storyList) => ListView(
+                children: [
+                  for (var story in storyList)
+                    ListTile(
+                      title: Text(story.name ?? ""),
+                      subtitle: Text(story.description ?? ""),
+                      isThreeLine: true,
+                      onTap: () => widget.onTapped(story.id ?? ""),
+                    )
+                ],
+              ),
+            StoryListErrorState(error: var message) => Center(
+                child: Text(message),
+              ),
+            _ => const SizedBox(),
+          },
+          floatingActionButton: FloatingActionButton(
+              child: Icon(Icons.add), onPressed: widget.onFabTapped),
+        );
       },
     );
   }

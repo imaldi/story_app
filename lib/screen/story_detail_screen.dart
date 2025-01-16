@@ -26,25 +26,25 @@ class _StoryDetailsScreenState extends State<StoryDetailsScreen> {
     });
     super.initState();
   }
+
   @override
   Widget build(BuildContext context) {
     // final story = stories.singleWhere((element) => element.id == widget.storyId);
     return Scaffold(
-      // appBar: AppBar(
-      //   title: Text(story.author),
-      // ),
+      appBar: AppBar(
+        title: Text('Story Detail'),
+      ),
       body: Consumer<StoryDetailProvider>(
         builder: (context, value, child) {
-
           return switch (value.resultDetailState) {
             StoryDetailLoadingState() => const Center(
-              child: CircularProgressIndicator(),
-            ),
+                child: CircularProgressIndicator(),
+              ),
             StoryDetailLoadedState(data: var story) =>
-                BodyOfDetailScreenWidget(story: story),
+              BodyOfDetailScreenWidget(story: story),
             StoryDetailErrorState(error: var message) => Center(
-              child: Text(message),
-            ),
+                child: Text(message),
+              ),
             _ => const SizedBox(),
           };
         },
