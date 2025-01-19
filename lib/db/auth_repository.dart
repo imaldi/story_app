@@ -55,7 +55,7 @@ class AuthRepository {
   Future<bool> deleteUser() async {
     final preferences = await SharedPreferences.getInstance();
     await Future.delayed(const Duration(seconds: 2));
-    return preferences.setString(userKey, "");
+    return preferences.clear();
   }
   Future<User?> getUser() async {
     final preferences = await SharedPreferences.getInstance();

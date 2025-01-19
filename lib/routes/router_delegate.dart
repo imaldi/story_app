@@ -80,6 +80,10 @@ class MyRouterDelegate extends RouterDelegate
               isAddingNewStory = true;
               notifyListeners();
             },
+            onLogout: (){
+              isLoggedIn = false;
+              notifyListeners();
+            },
           ),
         ),
         if (selectedStory != null)

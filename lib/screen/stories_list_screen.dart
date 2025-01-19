@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/model/story.dart';
+import 'package:story_app/provider/auth_provider.dart';
 import 'package:story_app/provider/story_list_provider.dart';
 import 'package:story_app/static/story_list_result_state.dart';
 
@@ -8,12 +10,14 @@ class StoriesListScreen extends StatefulWidget {
   final List<StoryDummy> stories;
   final Function(String, String) onTapped;
   final Function() onFabTapped;
+  final Function() onLogout;
 
   const StoriesListScreen({
     Key? key,
     required this.stories,
     required this.onTapped,
     required this.onFabTapped,
+    required this.onLogout,
   }) : super(key: key);
 
   @override
@@ -31,11 +35,39 @@ class _StoriesListScreenState extends State<StoriesListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return Consumer<AuthProvider>(
+
+  builder: (context, state, child) {
     return Consumer<StoryListProvider>(
       builder: (context, value, child) {
         return Scaffold(
           appBar: AppBar(
             title: const Text("Story App"),
+            actions: [
+              InkWell(
+                onTap: () async {
+                  final authRead = context.read<AuthProvider>();
+
+                  final result = await authRead.logout();
+
+                  if (result) {
+                    widget.onLogout();
+                    Fluttertoast.showToast(
+                        msg: "Success Log Out",
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.BOTTOM,
+                        timeInSecForIosWeb: 1,
+                        backgroundColor: Colors.greenAccent,
+                        textColor: Colors.white,
+                        fontSize: 16.0);
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Icon(Icons.logout),
+                ),
+              )
+            ],
           ),
           body: switch (value.resultListState) {
             StoryListLoadingState() => const Center(
@@ -67,5 +99,7 @@ class _StoriesListScreenState extends State<StoriesListScreen> {
         );
       },
     );
+  },
+);
   }
 }
