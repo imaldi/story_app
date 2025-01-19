@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/provider/auth_provider.dart';
 
@@ -19,14 +20,16 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final emailController = TextEditingController();
+  final userNameController = TextEditingController(text: "Aldi Majid 5");
+  final emailController = TextEditingController(text: 'aldiirsanmajid5@gmail.com');
 
-  final passwordController = TextEditingController();
+  final passwordController = TextEditingController(text: '12345678');
 
   final formKey = GlobalKey<FormState>();
 
   @override
   void dispose() {
+    userNameController.dispose();
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
@@ -47,6 +50,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                TextFormField(
+                  controller: userNameController,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your name.';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    hintText: "User Name",
+                  ),
+                ),
+                const SizedBox(height: 8),
+
                 TextFormField(
                   controller: emailController,
                   validator: (value) {
@@ -80,13 +97,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onPressed: () async {
                     if (formKey.currentState!.validate()) {
                       final User user = User(
+                        name: userNameController.text,
                         email: emailController.text,
                         password: passwordController.text,
                       );
                       final authRead = context.read<AuthProvider>();
 
                       final result = await authRead.register(user);
-                      if (result) widget.onRegister();
+                      if (result) {
+                        widget.onRegister();
+                        Fluttertoast.showToast(
+                            msg: "Success Register",
+                            toastLength: Toast.LENGTH_SHORT,
+                            gravity: ToastGravity.BOTTOM,
+                            timeInSecForIosWeb: 1,
+                            backgroundColor: Colors.redAccent,
+                            textColor: Colors.white,
+                            fontSize: 16.0);
+                      } else {
+                        Fluttertoast.showToast(
+                            msg: "Failed Register (Email might have been taken)",
+                            toastLength: Toast.LENGTH_SHORT,
+                            gravity: ToastGravity.BOTTOM,
+                            timeInSecForIosWeb: 1,
+                            backgroundColor: Colors.greenAccent,
+                            textColor: Colors.white,
+                            fontSize: 16.0);
+                      }
                     }
                   },
                   child: const Text("REGISTER"),

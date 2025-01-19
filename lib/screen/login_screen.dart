@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/model/user.dart';
 import 'package:story_app/provider/auth_provider.dart';
@@ -99,6 +100,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             final result = await authRead.login(user);
                             if (result) {
                               widget.onLogin();
+
+                              Fluttertoast.showToast(
+                                  msg: "Success Log In",
+                                  toastLength: Toast.LENGTH_SHORT,
+                                  gravity: ToastGravity.BOTTOM,
+                                  timeInSecForIosWeb: 1,
+                                  backgroundColor: Colors.greenAccent,
+                                  textColor: Colors.white,
+                                  fontSize: 16.0);
                             } else {
                               scaffoldMessenger.showSnackBar(
                                 const SnackBar(

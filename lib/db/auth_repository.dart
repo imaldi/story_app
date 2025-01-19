@@ -29,7 +29,6 @@ class AuthRepository {
       return preferences.setBool(stateKey, true);
     } catch(e) {
       return false;
-      // throw Exception("Failure login: $e");
     }
   }
 
@@ -48,7 +47,8 @@ class AuthRepository {
       }
       return false;
     } catch(e) {
-      throw Exception("Failure login: $e");
+      return false;
+
     }
 
   }

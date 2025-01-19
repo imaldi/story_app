@@ -16,18 +16,18 @@ class AuthApiServices {
         "password": user.password
       };
       final response = await http.post(
-        Uri.parse("$baseUrl/register"),
+        Uri.https(baseUrl, "$v1Path/register"),
         headers: {"Content-Type": "application/json"},
         body: json.encode(body)
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         return true;
       } else {
-        throw Exception('Failed to load restaurant list');
+        throw Exception('Failed to register');
       }
     } catch (e) {
-      print("Error getting list of stories: $e");
+      print("Error Register: $e");
       rethrow;
     }
   }
