@@ -7,51 +7,62 @@ class AddStoryProvider extends ChangeNotifier {
   final StoryApiServices _apiServices;
 
   AddStoryProvider(
-      this._apiServices,
-      );
+    this._apiServices,
+  );
 
   AddStoryResultState _addStoryResultState = AddStoryNoneState();
 
   AddStoryResultState get addStoryResultState => _addStoryResultState;
 
+  bool isLoadingAddStory = false;
 
-  Future<void> addStory(Story story) async {
+  Future<bool> addStory(Story story) async {
     try {
       _addStoryResultState = AddStoryLoadingState();
       notifyListeners();
 
-      final result = await _apiServices.addNewStory(description: story.description ?? "", photoPath: story.photoUrl ?? "") ;
+      final result = await _apiServices.addNewStory(
+          description: story.description ?? "",
+          photoPath: story.photoUrl ?? "");
 
-      if (result.error ?? false) {
-        _addStoryResultState = AddStoryErrorState(result.message ?? "");
+      if (!result) {
+        _addStoryResultState = AddStoryErrorState("Failed add story");
         notifyListeners();
+        return false;
       } else {
         _addStoryResultState = AddStorySuccessState();
         notifyListeners();
+        return result;
       }
     } on Exception catch (e) {
       _addStoryResultState = AddStoryErrorState(e.toString());
       notifyListeners();
+      return false;
     }
   }
 
-  Future<void> addStoryAsGuest(Story story) async {
+  Future<bool> addStoryAsGuest(Story story) async {
     try {
       _addStoryResultState = AddStoryLoadingState();
       notifyListeners();
 
-      final result = await _apiServices.addNewStory(description: story.description ?? "", photoPath: story.photoUrl ?? "") ;
+      final result = await _apiServices.addNewStory(
+          description: story.description ?? "",
+          photoPath: story.photoUrl ?? "");
 
-      if (result.error ?? false) {
-        _addStoryResultState = AddStoryErrorState(result.message ?? "");
+      if (!result) {
+        _addStoryResultState = AddStoryErrorState("Failed Add Story");
         notifyListeners();
+        return false;
       } else {
         _addStoryResultState = AddStorySuccessState();
         notifyListeners();
+        return result;
       }
     } on Exception catch (e) {
       _addStoryResultState = AddStoryErrorState(e.toString());
       notifyListeners();
+      return false;
     }
   }
 }

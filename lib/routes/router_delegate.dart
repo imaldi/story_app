@@ -93,6 +93,9 @@ class MyRouterDelegate extends RouterDelegate
               onPop: () {
                 isAddingNewStory = false;
               },
+              onSuccessAdd: () {
+                isAddingNewStory = false;
+              },
             ),
           ),
       ];

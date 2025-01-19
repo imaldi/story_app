@@ -8,7 +8,7 @@ import 'package:story_app/model/story_response.dart';
 
 class StoryApiServices {
   Future<StoryListResponse> getStoryList() async {
-    try{
+    try {
       // Get Bearer Token from SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString(tokenKey);
@@ -17,7 +17,8 @@ class StoryApiServices {
         throw Exception("Authentication token is missing");
       }
 
-      final response = await http.get(Uri.https(baseUrl,"$v1Path/stories"),
+      final response = await http.get(
+        Uri.https(baseUrl, "$v1Path/stories"),
         headers: {
           'Authorization': 'Bearer $token',
         },
@@ -38,7 +39,7 @@ class StoryApiServices {
   }
 
   Future<StoryDetailResponse> getStoryDetail(String id) async {
-    try{
+    try {
       // Get Bearer Token from SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString(tokenKey);
@@ -47,7 +48,8 @@ class StoryApiServices {
         throw Exception("Authentication token is missing");
       }
 
-      final response = await http.get(Uri.https(baseUrl,"$v1Path/stories/$id"),
+      final response = await http.get(
+        Uri.https(baseUrl, "$v1Path/stories/$id"),
         headers: {
           'Authorization': 'Bearer $token',
         },
@@ -67,7 +69,7 @@ class StoryApiServices {
     }
   }
 
-  Future<StoryDetailResponse> addNewStory({
+  Future<bool> addNewStory({
     required String description,
     // TODO nanti akalin gimana bisa dapat filenya dari sini
     required String photoPath,
@@ -118,7 +120,7 @@ class StoryApiServices {
 
       if (response.statusCode == 200) {
         print("Story uploaded successfully");
-        return StoryDetailResponse(message: "Success Add Story");
+        return true;
       } else {
         throw Exception('Failed to upload story: ${response.body}');
       }
@@ -139,7 +141,6 @@ class StoryApiServices {
     try {
       // Create Multipart Request
       final request = http.MultipartRequest('POST', Uri.parse(endpoint));
-
 
       // Check is photo file exist to upload
       final file = File(photoPath);
