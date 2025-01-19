@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:story_app/db/auth_repository.dart';
 import 'package:story_app/screen/add_new_story_screen.dart';
 import 'package:story_app/screen/login_screen.dart';
@@ -95,6 +96,14 @@ class MyRouterDelegate extends RouterDelegate
               },
               onSuccessAdd: () {
                 isAddingNewStory = false;
+                Fluttertoast.showToast(
+                    msg: "Success Add Story",
+                    toastLength: Toast.LENGTH_SHORT,
+                    gravity: ToastGravity.BOTTOM,
+                    timeInSecForIosWeb: 1,
+                    backgroundColor: Colors.greenAccent,
+                    textColor: Colors.white,
+                    fontSize: 16.0);
               },
             ),
           ),

@@ -76,7 +76,7 @@ class StoryApiServices {
     double? lat,
     double? lon,
   }) async {
-    final String endpoint = "$baseUrl/stories";
+    final String endpoint = "https://$baseUrl$v1Path/stories";
 
     try {
       // Get Bearer Token from SharedPreferences
@@ -136,7 +136,7 @@ class StoryApiServices {
     double? lat,
     double? lon,
   }) async {
-    final String endpoint = "$baseUrl/stories/guest";
+    final String endpoint = "https://$baseUrl$v1Path/stories/guest";
 
     try {
       // Create Multipart Request
