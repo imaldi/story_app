@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/api/auth_api_service.dart';
 import 'package:story_app/api/story_api_service.dart';
@@ -54,6 +55,7 @@ class _StoryAppState extends State<StoryApp> {
         /// todo 5: add backButtonnDispatcher to handle System Back Button
         backButtonDispatcher: RootBackButtonDispatcher(),
       ),
+      builder: EasyLoading.init(),
     );
   }
 }

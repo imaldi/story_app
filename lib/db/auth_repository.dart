@@ -28,7 +28,8 @@ class AuthRepository {
       preferences.setString(tokenKey, userResult.token ?? "");
       return preferences.setBool(stateKey, true);
     } catch(e) {
-      throw Exception("Failure login: $e");
+      return false;
+      // throw Exception("Failure login: $e");
     }
   }
 

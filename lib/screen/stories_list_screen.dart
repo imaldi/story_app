@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/model/story.dart';
@@ -46,11 +47,14 @@ class _StoriesListScreenState extends State<StoriesListScreen> {
             actions: [
               InkWell(
                 onTap: () async {
+                  EasyLoading.show(status: 'Logging Out',dismissOnTap: true);
+
                   final authRead = context.read<AuthProvider>();
 
                   final result = await authRead.logout();
 
                   if (result) {
+                    EasyLoading.dismiss();
                     widget.onLogout();
                     Fluttertoast.showToast(
                         msg: "Success Log Out",
