@@ -8,10 +8,12 @@ import '../model/story.dart';
 
 class StoryDetailsScreen extends StatefulWidget {
   final String storyId;
+  final String? storyImageUrl;
 
   const StoryDetailsScreen({
     super.key,
     required this.storyId,
+    this.storyImageUrl
   });
 
   @override
@@ -41,7 +43,7 @@ class _StoryDetailsScreenState extends State<StoryDetailsScreen> {
                 child: CircularProgressIndicator(),
               ),
             StoryDetailLoadedState(data: var story) =>
-              BodyOfDetailScreenWidget(story: story),
+              BodyOfDetailScreenWidget(story: story.copyWith(photoUrl: story.photoUrl ?? widget.storyImageUrl)),
             StoryDetailErrorState(error: var message) => Center(
                 child: Text(message),
               ),

@@ -28,6 +28,7 @@ class MyRouterDelegate extends RouterDelegate
   GlobalKey<NavigatorState> get navigatorKey => _navigatorKey;
 
   String? selectedStory;
+  String? selectedStoryPath;
 
   List<Page> get _splashStack => const [
         MaterialPage(
@@ -70,8 +71,9 @@ class MyRouterDelegate extends RouterDelegate
           key: const ValueKey("QuotesListPage"),
           child: StoriesListScreen(
             stories: stories,
-            onTapped: (String storyId) {
+            onTapped: (String storyId, String storyImagePath) {
               selectedStory = storyId;
+              selectedStoryPath = storyImagePath;
               notifyListeners();
             },
             onFabTapped: () {
@@ -85,6 +87,7 @@ class MyRouterDelegate extends RouterDelegate
             key: ValueKey(selectedStory),
             child: StoryDetailsScreen(
               storyId: selectedStory!,
+              storyImageUrl: selectedStoryPath,
             ),
           ),
         if (isAddingNewStory)
@@ -93,9 +96,11 @@ class MyRouterDelegate extends RouterDelegate
             child: AddNewStoryScreen(
               onPop: () {
                 isAddingNewStory = false;
+                notifyListeners();
               },
               onSuccessAdd: () {
                 isAddingNewStory = false;
+                notifyListeners();
                 Fluttertoast.showToast(
                     msg: "Success Add Story",
                     toastLength: Toast.LENGTH_SHORT,

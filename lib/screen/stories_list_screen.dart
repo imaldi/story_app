@@ -6,7 +6,7 @@ import 'package:story_app/static/story_list_result_state.dart';
 
 class StoriesListScreen extends StatefulWidget {
   final List<StoryDummy> stories;
-  final Function(String) onTapped;
+  final Function(String, String) onTapped;
   final Function() onFabTapped;
 
   const StoriesListScreen({
@@ -41,17 +41,22 @@ class _StoriesListScreenState extends State<StoriesListScreen> {
             StoryListLoadingState() => const Center(
                 child: CircularProgressIndicator(),
               ),
-            StoryListLoadedState(data: var storyList) => ListView(
-                children: [
-                  for (var story in storyList)
-                    ListTile(
-                      title: Text(story.name ?? ""),
-                      subtitle: Text(story.description ?? ""),
-                      isThreeLine: true,
-                      onTap: () => widget.onTapped(story.id ?? ""),
-                    )
-                ],
-              ),
+            StoryListLoadedState(data: var storyList) => RefreshIndicator(
+              onRefresh: () async {
+                await context.read<StoryListProvider>().fetchStoryList();
+              },
+              child: ListView(
+                  children: [
+                    for (var story in storyList)
+                      ListTile(
+                        title: Text(story.name ?? ""),
+                        subtitle: Text(story.description ?? ""),
+                        isThreeLine: true,
+                        onTap: () => widget.onTapped(story.id ?? "", story.photoUrl ?? ''),
+                      )
+                  ],
+                ),
+            ),
             StoryListErrorState(error: var message) => Center(
                 child: Text(message),
               ),

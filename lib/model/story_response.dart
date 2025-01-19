@@ -80,9 +80,7 @@ class Story extends Equatable {
   final String? id;
   final String? name;
   final String? description;
-  @JsonKey(name: "photo_url")
   final String? photoUrl;
-  @JsonKey(name: "created_at")
   final DateTime? createdAt;
   final double? lat;
   final double? lon;

@@ -30,17 +30,24 @@ class _BodyOfDetailScreenWidgetState extends State<BodyOfDetailScreenWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Center(
-              child: Image.network(
-                widget.story.photoUrl ?? "",
-                fit: BoxFit.cover,
-                errorBuilder: (context, object, stacTrace) {
-                  return Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Icon(Icons.broken_image),
-                        Text("The image is not found"),
-                      ]);
-                },
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: SizedBox(
+                  width: 300,
+                  height: 300,
+                  child: Image.network(
+                    widget.story.photoUrl ?? "",
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, object, stacTrace) {
+                      return Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Icon(Icons.broken_image),
+                            Text("The image is not found"),
+                          ]);
+                    },
+                  ),
+                ),
               ),
             ),
             const SizedBox.square(dimension: 16),

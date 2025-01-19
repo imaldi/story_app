@@ -55,8 +55,8 @@ class StoryApiServices {
         },
       );
 
-      print("Status List: ${response.statusCode}");
-      print("Body List: ${response.body}");
+      print("Status Detail: ${response.statusCode}");
+      print("Body Detail: ${response.body}");
 
       if (response.statusCode == 200) {
         return StoryDetailResponse.fromJson(jsonDecode(response.body));
@@ -118,7 +118,7 @@ class StoryApiServices {
       // Get response
       final response = await http.Response.fromStream(streamedResponse);
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         print("Story uploaded successfully");
         return true;
       } else {
