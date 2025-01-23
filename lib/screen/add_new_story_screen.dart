@@ -1,19 +1,26 @@
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:story_app/extensions/color_extensions.dart';
+import 'package:story_app/model/shape_border_type.dart';
 import 'package:story_app/model/story_response.dart';
 import 'package:story_app/provider/add_story_provider.dart';
+import 'package:story_app/screen/choose_image_source_dialog.dart';
 import 'package:story_app/utils/file_compressor.dart';
 
 class AddNewStoryScreen extends StatefulWidget {
   const AddNewStoryScreen(
-      {required this.onPop, required this.onSuccessAdd, super.key});
+      {required this.onPop, required this.onSuccessAdd, required this.isChoosingImageSourceNotifier, required this.callbackImageChosenNotifier, super.key});
 
   final Function() onPop;
   final Function() onSuccessAdd;
+  final ValueNotifier<bool?> isChoosingImageSourceNotifier;
+  final ValueNotifier<Future<void> Function(ImageSource source, {required BuildContext context})?> callbackImageChosenNotifier;
+
 
   @override
   State<AddNewStoryScreen> createState() => _AddNewStoryScreenState();
@@ -43,173 +50,74 @@ class _AddNewStoryScreenState extends State<AddNewStoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      onPopInvokedWithResult: (didPop, result) {
-        widget.onPop();
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Add New Story'),
-        ),
-        body: SingleChildScrollView(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 300),
-              child: Form(
-                key: formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: descriptionController,
-                      decoration: const InputDecoration(
-                        hintText: "Description",
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your password.';
-                        }
-                        return null;
-                      },
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Add New Story'),
+      ),
+      body: SingleChildScrollView(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 300),
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: descriptionController,
+                    decoration: const InputDecoration(
+                      hintText: "Description",
                     ),
-                    const SizedBox(height: 8),
-                    _previewImages(),
-                    const SizedBox(height: 8),
-                    ElevatedButton(
-                        onPressed: () async {
-                          await showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    "Confirm",
-                                  ),
-                                ],
-                              ),
-                              content: const Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    "Silahkan pilih sumber gambar",
-                                    softWrap: true,
-                                    textAlign: TextAlign.justify,
-                                  ),
-                                ],
-                              ),
-                              actions: [
-                                Container(
-                                  margin: const EdgeInsets.all(8.0),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Flexible(
-                                        child: Container(
-                                          height: 45,
-                                          width:
-                                              MediaQuery.of(context).size.width,
-                                          child: ElevatedButton(
-                                            onPressed: () async {
-                                              await _onImageButtonPressed(
-                                                  ImageSource.gallery,
-                                                  context: context);
-                                              Navigator.of(context).pop();
-                                            },
-                                            style: ElevatedButton.styleFrom(
-                                              shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          8.0)),
-                                              backgroundColor:
-                                                  Colors.greenAccent,
-                                              side: const BorderSide(
-                                                  color: Colors.greenAccent),
-                                            ),
-                                            child: const Text(
-                                              "Gallery",
-                                              style: TextStyle(
-                                                  color: Colors.white),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Flexible(
-                                        child: Container(
-                                          height: 45,
-                                          width:
-                                              MediaQuery.of(context).size.width,
-                                          child: ElevatedButton(
-                                            style: ElevatedButton.styleFrom(
-                                              shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          8.0)),
-                                              backgroundColor:
-                                                  Colors.greenAccent,
-                                              side: const BorderSide(
-                                                  color: Colors.greenAccent),
-                                            ),
-                                            onPressed: () async {
-                                              await _onImageButtonPressed(
-                                                  ImageSource.camera,
-                                                  context: context);
-                                              Navigator.of(context).pop();
-                                            },
-                                            child: const Text(
-                                              "Camera",
-                                              style: TextStyle(
-                                                  color: Colors.white),
-                                            ),
-                                          ),
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                          // _onImageButtonPressed(ImageSource.gallery,
-                          //     context: context);
-                        },
-                        child: const Text("Pilih Gambar")),
-                    const SizedBox(height: 8),
-                    context.watch<AddStoryProvider>().isLoadingAddStory
-                        ? const Center(child: CircularProgressIndicator())
-                        : ElevatedButton(
-                            onPressed: () async {
-                              if (formKey.currentState!.validate()) {
-                                final Story story = Story(
-                                    // name: titleController.text,
-                                    description: descriptionController.text,
-                                    photoUrl: _mediaFileList?.last.path);
-                                final authRead =
-                                    context.read<AddStoryProvider>();
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your password.';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  _previewImages(),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                      onPressed: () async {
+                        widget.isChoosingImageSourceNotifier.value = true;
+                        widget.callbackImageChosenNotifier.value = _onImageButtonPressed;
+                      },
+                      child: const Text("Pilih Gambar")),
+                  const SizedBox(height: 8),
+                  context.watch<AddStoryProvider>().isLoadingAddStory
+                      ? const Center(child: CircularProgressIndicator())
+                      : ElevatedButton(
+                          onPressed: () async {
+                            if (formKey.currentState!.validate()) {
+                              final Story story = Story(
+                                  // name: titleController.text,
+                                  description: descriptionController.text,
+                                  photoUrl: _mediaFileList?.last.path);
+                              final authRead =
+                                  context.read<AddStoryProvider>();
 
-                                final result = await authRead.addStory(story);
-                                if (result) {
-                                  widget.onSuccessAdd();
-                                } else {
-                                  Fluttertoast.showToast(
-                                      msg: "Failed Add Story",
-                                      toastLength: Toast.LENGTH_SHORT,
-                                      gravity: ToastGravity.BOTTOM,
-                                      timeInSecForIosWeb: 1,
-                                      backgroundColor: Colors.redAccent,
-                                      textColor: Colors.white,
-                                      fontSize: 16.0);
-                                }
+                              final result = await authRead.addStory(story);
+                              if (result) {
+                                widget.onSuccessAdd();
+                              } else {
+                                Fluttertoast.showToast(
+                                    msg: "Failed Add Story",
+                                    toastLength: Toast.LENGTH_SHORT,
+                                    gravity: ToastGravity.BOTTOM,
+                                    timeInSecForIosWeb: 1,
+                                    backgroundColor: Colors.redAccent,
+                                    textColor: Colors.white,
+                                    fontSize: 16.0);
                               }
-                            },
-                            child: const Text("Add Story"),
-                          ),
-                    const SizedBox(height: 8),
-                  ],
-                ),
+                            }
+                          },
+                          child: const Text("Add Story"),
+                        ),
+                  const SizedBox(height: 8),
+                ],
               ),
             ),
           ),

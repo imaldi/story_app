@@ -8,6 +8,7 @@ import 'package:story_app/provider/add_story_provider.dart';
 import 'package:story_app/provider/auth_provider.dart';
 import 'package:story_app/provider/story_detail_provider.dart';
 import 'package:story_app/provider/story_list_provider.dart';
+import 'package:story_app/routes/route_information_parser.dart';
 import 'package:story_app/routes/router_delegate.dart';
 
 void main() {
@@ -30,13 +31,15 @@ class StoryApp extends StatefulWidget {
 
 class _StoryAppState extends State<StoryApp> {
   late MyRouterDelegate myRouterDelegate;
-
+  late MyRouteInformationParser myRouteInformationParser;
   @override
   void initState() {
     super.initState();
     final authRepository = AuthRepository(AuthApiServices());
 
     myRouterDelegate = MyRouterDelegate(authRepository);
+
+    myRouteInformationParser = MyRouteInformationParser();
   }
 
   @override
@@ -51,7 +54,7 @@ class _StoryAppState extends State<StoryApp> {
       // home: const MyHomePage(title: 'Flutter Demo Home Page'),
       home: Router(
         routerDelegate: myRouterDelegate,
-
+        routeInformationParser: myRouteInformationParser,
         /// todo 5: add backButtonnDispatcher to handle System Back Button
         backButtonDispatcher: RootBackButtonDispatcher(),
       ),

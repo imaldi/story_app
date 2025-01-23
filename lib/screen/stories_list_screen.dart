@@ -37,73 +37,94 @@ class _StoriesListScreenState extends State<StoriesListScreen> {
   @override
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
+      builder: (context, state, child) {
+        return Consumer<StoryListProvider>(
+          builder: (context, value, child) {
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text("Story App"),
+                actions: [
+                  InkWell(
+                    onTap: () async {
+                      EasyLoading.show(
+                          status: 'Logging Out', dismissOnTap: true);
 
-  builder: (context, state, child) {
-    return Consumer<StoryListProvider>(
-      builder: (context, value, child) {
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text("Story App"),
-            actions: [
-              InkWell(
-                onTap: () async {
-                  EasyLoading.show(status: 'Logging Out',dismissOnTap: true);
+                      final authRead = context.read<AuthProvider>();
 
-                  final authRead = context.read<AuthProvider>();
+                      final result = await authRead.logout();
 
-                  final result = await authRead.logout();
-
-                  if (result) {
-                    EasyLoading.dismiss();
-                    widget.onLogout();
-                    Fluttertoast.showToast(
-                        msg: "Success Log Out",
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.BOTTOM,
-                        timeInSecForIosWeb: 1,
-                        backgroundColor: Colors.greenAccent,
-                        textColor: Colors.white,
-                        fontSize: 16.0);
-                  }
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Icon(Icons.logout),
-                ),
-              )
-            ],
-          ),
-          body: switch (value.resultListState) {
-            StoryListLoadingState() => const Center(
-                child: CircularProgressIndicator(),
+                      if (result) {
+                        EasyLoading.dismiss();
+                        widget.onLogout();
+                        Fluttertoast.showToast(
+                            msg: "Success Log Out",
+                            toastLength: Toast.LENGTH_SHORT,
+                            gravity: ToastGravity.BOTTOM,
+                            timeInSecForIosWeb: 1,
+                            backgroundColor: Colors.greenAccent,
+                            textColor: Colors.white,
+                            fontSize: 16.0);
+                      }
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Icon(Icons.logout),
+                    ),
+                  )
+                ],
               ),
-            StoryListLoadedState(data: var storyList) => RefreshIndicator(
-              onRefresh: () async {
-                await context.read<StoryListProvider>().fetchStoryList();
+              body: switch (value.resultListState) {
+                StoryListLoadingState() => const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                StoryListLoadedState(data: var storyList) => RefreshIndicator(
+                    onRefresh: () async {
+                      await context.read<StoryListProvider>().fetchStoryList();
+                    },
+                    child: ListView(
+                      children: [
+                        for (var story in storyList)
+                          ListTile(
+                            leading: ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: SizedBox(
+                                width: 32,
+                                height: 32,
+                                child: Image.network(
+                                  story.photoUrl ?? "",
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, object, stacTrace) {
+                                    return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.broken_image),
+                                          Text("The image is not found"),
+                                        ]);
+                                  },
+                                ),
+                              ),
+                            ),
+                            title: Text(story.name ?? ""),
+                            subtitle: Text(story.description ?? ""),
+                            isThreeLine: true,
+                            onTap: () => widget.onTapped(
+                                story.id ?? "", story.photoUrl ?? ''),
+                          )
+                      ],
+                    ),
+                  ),
+                StoryListErrorState(error: var message) => Center(
+                    child: Text(message),
+                  ),
+                _ => const SizedBox(),
               },
-              child: ListView(
-                  children: [
-                    for (var story in storyList)
-                      ListTile(
-                        title: Text(story.name ?? ""),
-                        subtitle: Text(story.description ?? ""),
-                        isThreeLine: true,
-                        onTap: () => widget.onTapped(story.id ?? "", story.photoUrl ?? ''),
-                      )
-                  ],
-                ),
-            ),
-            StoryListErrorState(error: var message) => Center(
-                child: Text(message),
-              ),
-            _ => const SizedBox(),
+              floatingActionButton: FloatingActionButton(
+                  child: Icon(Icons.add), onPressed: widget.onFabTapped),
+            );
           },
-          floatingActionButton: FloatingActionButton(
-              child: Icon(Icons.add), onPressed: widget.onFabTapped),
         );
       },
     );
-  },
-);
   }
 }
