@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:provider/provider.dart';
@@ -10,8 +12,12 @@ import 'package:story_app/provider/story_detail_provider.dart';
 import 'package:story_app/provider/story_list_provider.dart';
 import 'package:story_app/routes/route_information_parser.dart';
 import 'package:story_app/routes/router_delegate.dart';
-
-void main() {
+Future<Uri?> getVmUri() async {
+  ServiceProtocolInfo serviceProtocolInfo = await Service.getInfo();
+  return serviceProtocolInfo.serverUri;
+}
+void main() async {
+  log("vm uri:   ${await getVmUri()}");
   runApp(MultiProvider(
     providers: [
       ChangeNotifierProvider(create: (context)=>AuthProvider(AuthRepository(AuthApiServices()))),

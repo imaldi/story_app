@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -40,12 +41,47 @@ class _AddNewStoryScreenState extends State<AddNewStoryScreen> {
   final TextEditingController limitController = TextEditingController();
   String? _retrieveDataError;
 
-  List<XFile>? _mediaFileList;
+  List<File>? _mediaFileList;
 
   dynamic _pickImageError;
 
-  void _setImageFileListFromFile(XFile? value) {
-    _mediaFileList = value == null ? null : <XFile>[value];
+  void _setImageFileListFromFile(File? value) {
+    _mediaFileList = value == null ? null : <File>[value];
+  }
+
+  Future<void> _onImageButtonPressed(
+      ImageSource source, {
+        required BuildContext context,
+      }) async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: source,
+        // maxWidth: maxWidth,
+        // maxHeight: maxHeight,
+        // imageQuality: quality,
+      );
+
+      // File file = File(pickedFile?.path ?? '');
+
+      final length = await pickedFile?.length() ?? -1;
+
+      if (pickedFile != null && (length != -1)) {
+        final file = File(pickedFile.path);
+
+        var compressedImage = await imageCompressor(file, maxSize: 1);
+        log("Masuk Pak Eko");
+        print("Masuk Pak Eko");
+        setState(() {
+          _setImageFileListFromFile(compressedImage);
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _pickImageError = e;
+        log("Ini error: $_pickImageError");
+        print("Ini error: $_pickImageError");
+      });
+    }
   }
 
   @override
@@ -72,7 +108,7 @@ class _AddNewStoryScreenState extends State<AddNewStoryScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your password.';
+                        return 'Please enter your story.';
                       }
                       return null;
                     },
@@ -126,32 +162,7 @@ class _AddNewStoryScreenState extends State<AddNewStoryScreen> {
     );
   }
 
-  Future<void> _onImageButtonPressed(
-    ImageSource source, {
-    required BuildContext context,
-  }) async {
-    try {
-      final XFile? pickedFile = await _picker.pickImage(
-        source: source,
-        // maxWidth: maxWidth,
-        // maxHeight: maxHeight,
-        // imageQuality: quality,
-      );
 
-      // File file = File(pickedFile?.path ?? '');
-
-      if (pickedFile != null) {
-        var compressedImage = await fileCompressor(pickedFile, maxInMB: 1);
-        setState(() {
-          _setImageFileListFromFile(compressedImage);
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _pickImageError = e;
-      });
-    }
-  }
 
   Text? _getRetrieveErrorWidget() {
     if (_retrieveDataError != null) {
