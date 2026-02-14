@@ -111,7 +111,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             toastLength: Toast.LENGTH_SHORT,
                             gravity: ToastGravity.BOTTOM,
                             timeInSecForIosWeb: 1,
-                            backgroundColor: Colors.redAccent,
+                            backgroundColor: Colors.greenAccent,
                             textColor: Colors.white,
                             fontSize: 16.0);
                       } else {
