@@ -17,18 +17,37 @@ class StoryListProvider extends ChangeNotifier {
 
   StoryListResultState get resultListState => _resultListState;
 
-  Future<void> fetchStoryList() async {
+  Future<void> fetchStoryList({
+      int? page,
+      int? size,
+      bool? isLocation = false,
+  }) async {
     try {
+      final List<Story> oldList = switch(_resultListState){
+        StoryListNoneState() => [],
+        StoryListLoadingState() => [],
+        StoryListErrorState() => [],
+        StoryListLoadedState(data: final data) => [...data],
+      };
       _resultListState = StoryListLoadingState();
       notifyListeners();
 
-      final result = await _apiServices.getStoryList();
+      final result = await _apiServices.getStoryList(
+        page: page,
+        size: size,
+        isLocation: isLocation,
+      );
 
-      if (result?.error ?? false) {
+      if (result.error ?? false) {
         _resultListState = StoryListErrorState(result.message ?? "");
         notifyListeners();
       } else {
-        _resultListState = StoryListLoadedState(result.listStory ?? []);
+        for (final item in (result.listStory ?? [])) {
+          if (!oldList.contains(item.id)) {
+            oldList.add(item);
+          }
+        }
+        _resultListState = StoryListLoadedState(oldList);
         notifyListeners();
       }
     } on Exception catch (e) {

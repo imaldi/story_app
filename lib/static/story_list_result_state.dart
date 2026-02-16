@@ -1,5 +1,6 @@
 import 'package:story_app/model/story_response.dart';
 
+/// mayvbe perlu freezed?
 sealed class StoryListResultState {}
 
 class StoryListNoneState extends StoryListResultState {}

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -31,8 +33,33 @@ class _StoriesListScreenState extends State<StoriesListScreen> {
     Future.microtask(() {
       context.read<StoryListProvider>().fetchStoryList();
     });
+
+
+    scrollController.addListener(() async {
+      if (scrollController.offset >= scrollController.position.maxScrollExtent) {
+        log("Kepanggil");
+        final listState = context.read<StoryListProvider>().resultListState;
+
+        switch(listState){
+          case StoryListNoneState(): break;
+          case StoryListLoadingState(): break;
+          case StoryListErrorState(): break;
+          case StoryListLoadedState(data: var list):
+            context.read<StoryListProvider>().fetchStoryList(
+              page: (list.length ~/ 10) + 1,
+              size: 10,
+            );
+        }
+      }
+
+      /// Ini sebenernya bisa untuk refresh
+      // if (scrollController.offset <= scrollController.position.minScrollExtent) {
+      //   widget.onRefresh?.call();
+      // }
+    });
     super.initState();
   }
+  final scrollController = ScrollController();
 
   @override
   Widget build(BuildContext context) {
@@ -81,9 +108,35 @@ class _StoriesListScreenState extends State<StoriesListScreen> {
                     onRefresh: () async {
                       await context.read<StoryListProvider>().fetchStoryList();
                     },
-                    child: ListView(
-                      children: [
-                        for (var story in storyList)
+                    child: ListView.builder(
+                      controller: scrollController,
+                      //   ..addListener(() async {
+                      //   if (scrollController.offset >= scrollController.position.maxScrollExtent) {
+                      //
+                      //     context.read<StoryListProvider>().fetchStoryList(
+                      //       page: (storyList.length ~/ 10) + 1,
+                      //       size: 10,
+                      //     );
+                      //     log("Kepanggil");
+                      //     // final listState = context.read<StoryListProvider>().resultListState;
+                      //     //
+                      //     // switch(listState){
+                      //     //   case StoryListNoneState(): break;
+                      //     //   case StoryListLoadingState(): break;
+                      //     //   case StoryListErrorState(): break;
+                      //     //   case StoryListLoadedState(data: var list):
+                      //     // }
+                      //   }
+                      //
+                      //   /// Ini sebenernya bisa untuk refresh
+                      //   // if (scrollController.offset <= scrollController.position.minScrollExtent) {
+                      //   //   widget.onRefresh?.call();
+                      //   // }
+                      // }),
+                      itemCount: storyList.length,
+                      itemBuilder: (context, index){
+                        final story = storyList[index];
+                        return
                           ListTile(
                             leading: ClipRRect(
                               borderRadius: BorderRadius.circular(20),
@@ -96,7 +149,7 @@ class _StoriesListScreenState extends State<StoriesListScreen> {
                                   errorBuilder: (context, object, stacTrace) {
                                     return Column(
                                         crossAxisAlignment:
-                                            CrossAxisAlignment.center,
+                                        CrossAxisAlignment.center,
                                         children: [
                                           Icon(Icons.broken_image),
                                           Text("The image is not found"),
@@ -110,8 +163,8 @@ class _StoriesListScreenState extends State<StoriesListScreen> {
                             isThreeLine: true,
                             onTap: () => widget.onTapped(
                                 story.id ?? "", story.photoUrl ?? ''),
-                          )
-                      ],
+                          );
+                      },
                     ),
                   ),
                 StoryListErrorState(error: var message) => Center(

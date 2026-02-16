@@ -7,7 +7,7 @@ import 'package:story_app/core/consts/consts.dart';
 import 'package:story_app/model/story_response.dart';
 
 class StoryApiServices {
-  Future<StoryListResponse> getStoryList() async {
+  Future<StoryListResponse> getStoryList({int? page = 1, int? size = 10, bool? isLocation = false}) async {
     try {
       // Get Bearer Token from SharedPreferences
       final prefs = await SharedPreferences.getInstance();
@@ -18,10 +18,14 @@ class StoryApiServices {
       }
 
       final response = await http.get(
-        Uri.https(baseUrl, "$v1Path/stories"),
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
+        Uri.https(baseUrl, "$v1Path/stories",
+            <String, dynamic>{
+          "page": (page ?? 1).toString(),
+          "size": (size ?? 10).toString(),
+          // if(isLocation != null) "location": (isLocation ? 1 : 0),
+        }
+        ),
+        headers: {'Authorization': 'Bearer $token'},
       );
 
       print("Status List: ${response.statusCode}");
@@ -50,9 +54,7 @@ class StoryApiServices {
 
       final response = await http.get(
         Uri.https(baseUrl, "$v1Path/stories/$id"),
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
+        headers: {'Authorization': 'Bearer $token'},
       );
 
       print("Status Detail: ${response.statusCode}");
@@ -104,13 +106,7 @@ class StoryApiServices {
       if (lon != null) request.fields['lon'] = lon.toString();
 
       // Add file to request
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'photo',
-          photoPath,
-          filename: photoPath.split('/').last,
-        ),
-      );
+      request.files.add(await http.MultipartFile.fromPath('photo', photoPath, filename: photoPath.split('/').last));
 
       // Send request
       final streamedResponse = await request.send();
@@ -157,13 +153,7 @@ class StoryApiServices {
       if (lon != null) request.fields['lon'] = lon.toString();
 
       // Add file to request
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'photo',
-          photoPath,
-          filename: photoPath.split('/').last,
-        ),
-      );
+      request.files.add(await http.MultipartFile.fromPath('photo', photoPath, filename: photoPath.split('/').last));
 
       // Send request
       final streamedResponse = await request.send();
