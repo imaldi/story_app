@@ -15,7 +15,6 @@ import 'package:story_app/screen/stories_list_screen.dart';
 import 'package:story_app/screen/story_detail_screen.dart';
 
 import '../model/page_configuration.dart';
-import '../model/story.dart';
 import '../screen/unknown_screen.dart';
 
 class MyRouterDelegate extends RouterDelegate<PageConfiguration>
@@ -94,7 +93,6 @@ class MyRouterDelegate extends RouterDelegate<PageConfiguration>
         MaterialPage(
           key: const ValueKey("QuotesListPage"),
           child: StoriesListScreen(
-            stories: stories,
             onTapped: (String storyId, String storyImagePath) {
               selectedStory = storyId;
               selectedStoryPath = storyImagePath;

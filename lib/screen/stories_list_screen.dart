@@ -4,20 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
-import 'package:story_app/model/story.dart';
 import 'package:story_app/provider/auth_provider.dart';
 import 'package:story_app/provider/story_list_provider.dart';
 import 'package:story_app/static/story_list_result_state.dart';
 
 class StoriesListScreen extends StatefulWidget {
-  final List<StoryDummy> stories;
   final Function(String, String) onTapped;
   final Function() onFabTapped;
   final Function() onLogout;
 
   const StoriesListScreen({
     Key? key,
-    required this.stories,
     required this.onTapped,
     required this.onFabTapped,
     required this.onLogout,

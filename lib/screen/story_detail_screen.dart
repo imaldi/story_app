@@ -4,8 +4,6 @@ import 'package:story_app/provider/story_detail_provider.dart';
 import 'package:story_app/screen/body_of_detail_screen_widget.dart';
 import 'package:story_app/static/story_detail_result_state.dart';
 
-import '../model/story.dart';
-
 class StoryDetailsScreen extends StatefulWidget {
   final String storyId;
   final String? storyImageUrl;
