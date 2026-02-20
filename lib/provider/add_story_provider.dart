@@ -24,8 +24,8 @@ class AddStoryProvider extends ChangeNotifier {
       final result = await _apiServices.addNewStory(
           description: story.description ?? "",
           photoPath: story.photoUrl ?? "",
-          lat: story.latitude,
-          lon: story.longitude,
+          lat: story.lat,
+          lon: story.lon,
       );
 
       if (!result) {
@@ -52,8 +52,8 @@ class AddStoryProvider extends ChangeNotifier {
       final result = await _apiServices.addNewStory(
           description: story.description ?? "",
           photoPath: story.photoUrl ?? "",
-          lat: story.latitude,
-          lon: story.longitude,
+          lat: story.lat,
+          lon: story.lon,
       );
 
       if (!result) {

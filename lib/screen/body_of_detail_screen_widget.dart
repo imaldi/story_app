@@ -1,24 +1,73 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:story_app/model/story_response.dart';
 
 class BodyOfDetailScreenWidget extends StatefulWidget {
-  const BodyOfDetailScreenWidget({
-    super.key,
-    required this.story,
-  });
+  const BodyOfDetailScreenWidget({super.key, required this.story});
 
   final Story story;
 
   @override
-  State<BodyOfDetailScreenWidget> createState() =>
-      _BodyOfDetailScreenWidgetState();
+  State<BodyOfDetailScreenWidget> createState() => _BodyOfDetailScreenWidgetState();
 }
 
 class _BodyOfDetailScreenWidgetState extends State<BodyOfDetailScreenWidget> {
+  String? _selectedAddress;
+
   @override
   void initState() {
     print("Image Url: ${widget.story.photoUrl}");
+    _getCurrentLocation();
     super.initState();
+  }
+
+
+  Future<void> _getCurrentLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        Fluttertoast.showToast(msg: "Lokasi tidak aktif. Aktifkan dulu ya!");
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          Fluttertoast.showToast(msg: "Izin lokasi ditolak");
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        Fluttertoast.showToast(msg: "Izin lokasi ditolak permanen, buka pengaturan");
+        await Geolocator.openAppSettings();
+        return;
+      }
+
+      final lat = widget.story.lat;
+      final lon = widget.story.lon;
+      if (lat != null && lon != null) {
+        List<Placemark> placemarks = await placemarkFromCoordinates(lat, lon);
+
+        String? address;
+        if (placemarks.isNotEmpty) {
+          Placemark place = placemarks[0];
+          address = "${place.street}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea}";
+        }
+
+        setState(() {
+          _selectedAddress = address ?? "Alamat tidak ditemukan";
+        });
+      }
+    } catch (e) {
+      log("Error geolocation: $e");
+      Fluttertoast.showToast(msg: "Gagal mendapatkan lokasi: $e");
+    }
   }
 
   @override
@@ -40,11 +89,9 @@ class _BodyOfDetailScreenWidgetState extends State<BodyOfDetailScreenWidget> {
                     fit: BoxFit.cover,
                     errorBuilder: (context, object, stacTrace) {
                       return Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Icon(Icons.broken_image),
-                            Text("The image is not found"),
-                          ]);
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [Icon(Icons.broken_image), Text("The image is not found")],
+                      );
                     },
                   ),
                 ),
@@ -59,41 +106,36 @@ class _BodyOfDetailScreenWidgetState extends State<BodyOfDetailScreenWidget> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Text(widget.story.name ?? "", style: Theme.of(context).textTheme.headlineLarge),
                       Text(
-                        widget.story.name ?? "",
-                        style: Theme.of(context).textTheme.headlineLarge,
-                      ),
-                      Text(
-                        ("Created at: ${widget.story.createdAt ?? '-'}")
-                            .toString(),
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelLarge
-                            ?.copyWith(fontWeight: FontWeight.w400),
+                        ("Created at: ${widget.story.createdAt ?? '-'}").toString(),
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w400),
                       ),
                     ],
                   ),
                 ),
-                // Row(
-                //   children: [
-                //     const Icon(
-                //       Icons.favorite,
-                //       color: Colors.pink,
-                //     ),
-                //     const SizedBox.square(dimension: 4),
-                //     Text(
-                //       story.like.toString(),
-                //       style: Theme.of(context).textTheme.bodyLarge,
-                //     )
-                //   ],
-                // ),
               ],
             ),
             const SizedBox.square(dimension: 16),
+            if(widget.story.lat != null && widget.story.lon != null)
             Text(
-              widget.story.description ?? "",
-              style: Theme.of(context).textTheme.bodyLarge,
+              "Lokasi terpilih: ${widget.story.lat?.toStringAsFixed(6)}, "
+              "${widget.story.lon?.toStringAsFixed(6)}",
+              style: const TextStyle(fontSize: 13, color: Colors.blueGrey),
+              textAlign: TextAlign.center,
             ),
+            const SizedBox.square(dimension: 16),
+            if(widget.story.lat != null && widget.story.lon != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Text(
+                "Alamat: $_selectedAddress",
+                style: const TextStyle(fontSize: 14, color: Colors.blueGrey),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox.square(dimension: 16),
+            Text(widget.story.description ?? "", style: Theme.of(context).textTheme.bodyLarge),
           ],
         ),
       ),

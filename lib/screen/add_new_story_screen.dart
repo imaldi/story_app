@@ -39,18 +39,15 @@ class _AddNewStoryScreenState extends State<AddNewStoryScreen> {
 
 
   List<File>? _mediaFileList;
-  dynamic _pickImageError;
+  // dynamic _pickImageError;
 
-  // Google Maps related
   final Completer<GoogleMapController> _controller = Completer();
 
-  // Lokasi awal
   static const CameraPosition _initialPosition = CameraPosition(
     target: LatLng(-6.2088, 106.8456), // Jakarta
     zoom: 14.0,
   );
 
-  // Lokasi yang dipilih user (state)
   LatLng? _selectedLocation;
   String? _selectedAddress;
   bool _isGettingLocation = false;
@@ -143,7 +140,6 @@ class _AddNewStoryScreenState extends State<AddNewStoryScreen> {
         );
       });
 
-      // Animasi kamera ke lokasi
       final controller = await _controller.future;
       controller.animateCamera(CameraUpdate.newLatLngZoom(latLng, 15));
     } catch (e) {
@@ -166,8 +162,8 @@ class _AddNewStoryScreenState extends State<AddNewStoryScreen> {
         _mediaFileList = [compressed];
       });
     } catch (e) {
-      setState(() => _pickImageError = e);
-      log("Pick image error: $e");
+      // setState(() => _pickImageError = e);
+      // log("Pick image error: $e");
     }
   }
 
