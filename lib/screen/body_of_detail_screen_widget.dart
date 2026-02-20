@@ -1,9 +1,8 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:story_app/model/story_response.dart';
 
 class BodyOfDetailScreenWidget extends StatefulWidget {
@@ -17,61 +16,71 @@ class BodyOfDetailScreenWidget extends StatefulWidget {
 
 class _BodyOfDetailScreenWidgetState extends State<BodyOfDetailScreenWidget> {
   String? _selectedAddress;
+  GoogleMapController? _mapController;
 
   @override
   void initState() {
-    print("Image Url: ${widget.story.photoUrl}");
-    _getCurrentLocation();
     super.initState();
+    _getAddressFromCoordinates();
   }
 
+  Future<void> _getAddressFromCoordinates() async {
+    final lat = widget.story.lat;
+    final lon = widget.story.lon;
 
-  Future<void> _getCurrentLocation() async {
+    if (lat == null || lon == null) return;
+
     try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        Fluttertoast.showToast(msg: "Lokasi tidak aktif. Aktifkan dulu ya!");
-        return;
-      }
-
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          Fluttertoast.showToast(msg: "Izin lokasi ditolak");
-          return;
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        Fluttertoast.showToast(msg: "Izin lokasi ditolak permanen, buka pengaturan");
-        await Geolocator.openAppSettings();
-        return;
-      }
-
-      final lat = widget.story.lat;
-      final lon = widget.story.lon;
-      if (lat != null && lon != null) {
-        List<Placemark> placemarks = await placemarkFromCoordinates(lat, lon);
-
-        String? address;
-        if (placemarks.isNotEmpty) {
-          Placemark place = placemarks[0];
-          address = "${place.street}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea}";
-        }
-
+      List<Placemark> placemarks = await placemarkFromCoordinates(lat, lon);
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
         setState(() {
-          _selectedAddress = address ?? "Alamat tidak ditemukan";
+          _selectedAddress = "${place.street}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea}";
         });
       }
     } catch (e) {
-      log("Error geolocation: $e");
-      Fluttertoast.showToast(msg: "Gagal mendapatkan lokasi: $e");
+      log("Error reverse geocoding: $e");
+      setState(() {
+        _selectedAddress = "Alamat tidak dapat ditampilkan";
+      });
     }
+  }
+
+  void _onMapCreated(GoogleMapController controller) {
+    _mapController = controller;
+
+    final lat = widget.story.lat;
+    final lon = widget.story.lon;
+    if (lat != null && lon != null) {
+      final position = LatLng(lat, lon);
+      _mapController?.animateCamera(
+        CameraUpdate.newLatLngZoom(position, 15),
+      );
+    }
+  }
+
+  Set<Marker> _buildMarkers() {
+    final lat = widget.story.lat;
+    final lon = widget.story.lon;
+
+    if (lat == null || lon == null) return {};
+
+    return {
+      Marker(
+        markerId: const MarkerId('story_location'),
+        position: LatLng(lat, lon),
+        infoWindow: InfoWindow(
+          title: 'Lokasi Cerita',
+          snippet: _selectedAddress ?? 'Sedang memuat alamat...',
+        ),
+      ),
+    };
   }
 
   @override
   Widget build(BuildContext context) {
+    final hasLocation = widget.story.lat != null && widget.story.lon != null;
+
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -87,58 +96,90 @@ class _BodyOfDetailScreenWidgetState extends State<BodyOfDetailScreenWidget> {
                   child: Image.network(
                     widget.story.photoUrl ?? "",
                     fit: BoxFit.cover,
-                    errorBuilder: (context, object, stacTrace) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [Icon(Icons.broken_image), Text("The image is not found")],
+                    errorBuilder: (context, object, stackTrace) {
+                      return const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.broken_image, size: 60),
+                          SizedBox(height: 8),
+                          Text("Gambar tidak ditemukan"),
+                        ],
                       );
                     },
                   ),
                 ),
               ),
             ),
-            const SizedBox.square(dimension: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(widget.story.name ?? "", style: Theme.of(context).textTheme.headlineLarge),
-                      Text(
-                        ("Created at: ${widget.story.createdAt ?? '-'}").toString(),
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w400),
-                      ),
-                    ],
+            const SizedBox(height: 24),
+            Text(
+              widget.story.name ?? "Tanpa Judul",
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              "Dibuat pada: ${widget.story.createdAt ?? '-'}",
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              widget.story.description ?? "",
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: 32),
+
+            if (hasLocation) ...[
+              const Text(
+                "Lokasi Cerita",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 250,
+                child: GoogleMap(
+                  initialCameraPosition: CameraPosition(
+                    target: LatLng(widget.story.lat!, widget.story.lon!),
+                    zoom: 15,
                   ),
+                  markers: _buildMarkers(),
+                  onMapCreated: _onMapCreated,
+                  mapType: MapType.normal,
+                  myLocationButtonEnabled: false,
+                  zoomControlsEnabled: false,
+                  scrollGesturesEnabled: false,
+                  zoomGesturesEnabled: false,
+                  rotateGesturesEnabled: false,
+                  tiltGesturesEnabled: false,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                "Koordinat: ${widget.story.lat?.toStringAsFixed(6)}, ${widget.story.lon?.toStringAsFixed(6)}",
+                style: const TextStyle(fontSize: 13, color: Colors.blueGrey),
+              ),
+              if (_selectedAddress != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  "Alamat: $_selectedAddress",
+                  style: const TextStyle(fontSize: 14, color: Colors.blueGrey),
                 ),
               ],
-            ),
-            const SizedBox.square(dimension: 16),
-            if(widget.story.lat != null && widget.story.lon != null)
-            Text(
-              "Lokasi terpilih: ${widget.story.lat?.toStringAsFixed(6)}, "
-              "${widget.story.lon?.toStringAsFixed(6)}",
-              style: const TextStyle(fontSize: 13, color: Colors.blueGrey),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox.square(dimension: 16),
-            if(widget.story.lat != null && widget.story.lon != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                "Alamat: $_selectedAddress",
-                style: const TextStyle(fontSize: 14, color: Colors.blueGrey),
-                textAlign: TextAlign.center,
+            ] else ...[
+              const Text(
+                "Lokasi tidak tersedia untuk cerita ini",
+                style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
               ),
-            ),
-            const SizedBox.square(dimension: 16),
-            Text(widget.story.description ?? "", style: Theme.of(context).textTheme.bodyLarge),
+            ],
+
+            const SizedBox(height: 32),
           ],
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _mapController?.dispose();
+    super.dispose();
   }
 }
