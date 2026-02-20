@@ -1,27 +1,33 @@
+import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:story_app/extensions/color_extensions.dart';
-import 'package:story_app/model/shape_border_type.dart';
+// import 'package:story_app/extensions/color_extensions.dart';
+// import 'package:story_app/model/shape_border_type.dart';
 import 'package:story_app/model/story_response.dart';
 import 'package:story_app/provider/add_story_provider.dart';
-import 'package:story_app/screen/choose_image_source_dialog.dart';
+// import 'package:story_app/screen/choose_image_source_dialog.dart';
 import 'package:story_app/utils/file_compressor.dart';
 
 class AddNewStoryScreen extends StatefulWidget {
-  const AddNewStoryScreen(
-      {required this.onPop, required this.onSuccessAdd, required this.isChoosingImageSourceNotifier, required this.callbackImageChosenNotifier, super.key});
+  const AddNewStoryScreen({
+    required this.onPop,
+    required this.onSuccessAdd,
+    required this.isChoosingImageSourceNotifier,
+    required this.callbackImageChosenNotifier,
+    super.key,
+  });
 
   final Function() onPop;
   final Function() onSuccessAdd;
   final ValueNotifier<bool?> isChoosingImageSourceNotifier;
-  final ValueNotifier<Future<void> Function(ImageSource source, {required BuildContext context})?> callbackImageChosenNotifier;
-
+  final ValueNotifier<Future<void> Function(ImageSource source, {required BuildContext context})?>
+  callbackImageChosenNotifier;
 
   @override
   State<AddNewStoryScreen> createState() => _AddNewStoryScreenState();
@@ -49,10 +55,7 @@ class _AddNewStoryScreenState extends State<AddNewStoryScreen> {
     _mediaFileList = value == null ? null : <File>[value];
   }
 
-  Future<void> _onImageButtonPressed(
-      ImageSource source, {
-        required BuildContext context,
-      }) async {
+  Future<void> _onImageButtonPressed(ImageSource source, {required BuildContext context}) async {
     try {
       final XFile? pickedFile = await _picker.pickImage(
         source: source,
@@ -84,12 +87,24 @@ class _AddNewStoryScreenState extends State<AddNewStoryScreen> {
     }
   }
 
+  final Completer<GoogleMapController> _controller = Completer<GoogleMapController>();
+
+  static const CameraPosition _kGooglePlex = CameraPosition(
+    target: LatLng(37.42796133580664, -122.085749655962),
+    zoom: 14.4746,
+  );
+
+  static const CameraPosition _kLake = CameraPosition(
+    bearing: 192.8334901395799,
+    target: LatLng(37.43296265331129, -122.08832357078792),
+    tilt: 59.440717697143555,
+    zoom: 19.151926040649414,
+  );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add New Story'),
-      ),
+      appBar: AppBar(title: const Text('Add New Story')),
       body: SingleChildScrollView(
         child: Center(
           child: ConstrainedBox(
@@ -103,9 +118,7 @@ class _AddNewStoryScreenState extends State<AddNewStoryScreen> {
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: descriptionController,
-                    decoration: const InputDecoration(
-                      hintText: "Description",
-                    ),
+                    decoration: const InputDecoration(hintText: "Description"),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your story.';
@@ -117,11 +130,12 @@ class _AddNewStoryScreenState extends State<AddNewStoryScreen> {
                   _previewImages(),
                   const SizedBox(height: 8),
                   ElevatedButton(
-                      onPressed: () async {
-                        widget.isChoosingImageSourceNotifier.value = true;
-                        widget.callbackImageChosenNotifier.value = _onImageButtonPressed;
-                      },
-                      child: const Text("Pilih Gambar")),
+                    onPressed: () async {
+                      widget.isChoosingImageSourceNotifier.value = true;
+                      widget.callbackImageChosenNotifier.value = _onImageButtonPressed;
+                    },
+                    child: const Text("Pilih Gambar"),
+                  ),
                   const SizedBox(height: 8),
                   context.watch<AddStoryProvider>().isLoadingAddStory
                       ? const Center(child: CircularProgressIndicator())
@@ -129,40 +143,61 @@ class _AddNewStoryScreenState extends State<AddNewStoryScreen> {
                           onPressed: () async {
                             if (formKey.currentState!.validate()) {
                               final Story story = Story(
-                                  // name: titleController.text,
-                                  description: descriptionController.text,
-                                  photoUrl: _mediaFileList?.last.path);
-                              final authRead =
-                                  context.read<AddStoryProvider>();
+                                // name: titleController.text,
+                                description: descriptionController.text,
+                                photoUrl: _mediaFileList?.last.path,
+                              );
+                              final authRead = context.read<AddStoryProvider>();
 
                               final result = await authRead.addStory(story);
                               if (result) {
                                 widget.onSuccessAdd();
                               } else {
                                 Fluttertoast.showToast(
-                                    msg: "Failed Add Story",
-                                    toastLength: Toast.LENGTH_SHORT,
-                                    gravity: ToastGravity.BOTTOM,
-                                    timeInSecForIosWeb: 1,
-                                    backgroundColor: Colors.redAccent,
-                                    textColor: Colors.white,
-                                    fontSize: 16.0);
+                                  msg: "Failed Add Story",
+                                  toastLength: Toast.LENGTH_SHORT,
+                                  gravity: ToastGravity.BOTTOM,
+                                  timeInSecForIosWeb: 1,
+                                  backgroundColor: Colors.redAccent,
+                                  textColor: Colors.white,
+                                  fontSize: 16.0,
+                                );
                               }
                             }
                           },
                           child: const Text("Add Story"),
                         ),
                   const SizedBox(height: 8),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width,
+                    height: MediaQuery.of(context).size.width,
+                    child: GoogleMap(
+                      mapType: MapType.hybrid,
+                      initialCameraPosition: _kGooglePlex,
+                      onMapCreated: (GoogleMapController controller) {
+                        _controller.complete(controller);
+                      },
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
         ),
       ),
+
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _goToTheLake,
+        label: const Text('To the lake!'),
+        icon: const Icon(Icons.directions_boat),
+      ),
     );
   }
 
-
+  Future<void> _goToTheLake() async {
+    final GoogleMapController controller = await _controller.future;
+    await controller.animateCamera(CameraUpdate.newCameraPosition(_kLake));
+  }
 
   Text? _getRetrieveErrorWidget() {
     if (_retrieveDataError != null) {
@@ -195,10 +230,8 @@ class _AddNewStoryScreenState extends State<AddNewStoryScreen> {
                   width: 100,
                   child: Image.file(
                     File(_mediaFileList![index].path),
-                    errorBuilder: (BuildContext context, Object error,
-                        StackTrace? stackTrace) {
-                      return const Center(
-                          child: Text('This image type is not supported'));
+                    errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
+                      return const Center(child: Text('This image type is not supported'));
                     },
                     fit: BoxFit.cover,
                   ),
@@ -210,18 +243,11 @@ class _AddNewStoryScreenState extends State<AddNewStoryScreen> {
         ),
       );
     } else if (_pickImageError != null) {
-      return Text(
-        'Pick image error: $_pickImageError',
-        textAlign: TextAlign.center,
-      );
+      return Text('Pick image error: $_pickImageError', textAlign: TextAlign.center);
     } else {
-      return const Text(
-        'You have not yet picked an image.',
-        textAlign: TextAlign.center,
-      );
+      return const Text('You have not yet picked an image.', textAlign: TextAlign.center);
     }
   }
 }
 
-typedef OnPickImageCallback = void Function(
-    double? maxWidth, double? maxHeight, int? quality, int? limit);
+typedef OnPickImageCallback = void Function(double? maxWidth, double? maxHeight, int? quality, int? limit);
