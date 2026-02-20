@@ -34,6 +34,8 @@ abstract class Story with _$Story {
     String? name,
     String? description,
     String? photoUrl,
+    double? latitude,
+    double? longitude,
     DateTime? createdAt,
     double? lat,
     double? lon,

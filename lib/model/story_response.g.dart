@@ -44,6 +44,8 @@ _Story _$StoryFromJson(Map<String, dynamic> json) => _Story(
   name: json['name'] as String?,
   description: json['description'] as String?,
   photoUrl: json['photoUrl'] as String?,
+  latitude: (json['latitude'] as num?)?.toDouble(),
+  longitude: (json['longitude'] as num?)?.toDouble(),
   createdAt: json['createdAt'] == null
       ? null
       : DateTime.parse(json['createdAt'] as String),
@@ -56,6 +58,8 @@ Map<String, dynamic> _$StoryToJson(_Story instance) => <String, dynamic>{
   'name': instance.name,
   'description': instance.description,
   'photoUrl': instance.photoUrl,
+  'latitude': instance.latitude,
+  'longitude': instance.longitude,
   'createdAt': instance.createdAt?.toIso8601String(),
   'lat': instance.lat,
   'lon': instance.lon,

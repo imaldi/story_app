@@ -4,14 +4,13 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-// import 'package:story_app/extensions/color_extensions.dart';
-// import 'package:story_app/model/shape_border_type.dart';
 import 'package:story_app/model/story_response.dart';
 import 'package:story_app/provider/add_story_provider.dart';
-// import 'package:story_app/screen/choose_image_source_dialog.dart';
 import 'package:story_app/utils/file_compressor.dart';
 
 class AddNewStoryScreen extends StatefulWidget {
@@ -34,150 +33,296 @@ class AddNewStoryScreen extends StatefulWidget {
 }
 
 class _AddNewStoryScreenState extends State<AddNewStoryScreen> {
-  final titleController = TextEditingController();
-
   final descriptionController = TextEditingController();
-
   final formKey = GlobalKey<FormState>();
-
   final ImagePicker _picker = ImagePicker();
-  final TextEditingController maxWidthController = TextEditingController();
-  final TextEditingController maxHeightController = TextEditingController();
-  final TextEditingController qualityController = TextEditingController();
-  final TextEditingController limitController = TextEditingController();
-  String? _retrieveDataError;
+
 
   List<File>? _mediaFileList;
-
   dynamic _pickImageError;
 
-  void _setImageFileListFromFile(File? value) {
-    _mediaFileList = value == null ? null : <File>[value];
+  // Google Maps related
+  final Completer<GoogleMapController> _controller = Completer();
+
+  // Lokasi awal
+  static const CameraPosition _initialPosition = CameraPosition(
+    target: LatLng(-6.2088, 106.8456), // Jakarta
+    zoom: 14.0,
+  );
+
+  // Lokasi yang dipilih user (state)
+  LatLng? _selectedLocation;
+  String? _selectedAddress;
+  bool _isGettingLocation = false;
+
+  final Set<Marker> _markers = {};
+
+  void _onMapCreated(GoogleMapController controller) {
+    _controller.complete(controller);
+  }
+
+  void _onMapTapped(LatLng position) {
+    setState(() {
+      _selectedLocation = position;
+      _markers.clear();
+      _markers.add(
+        Marker(
+          markerId: const MarkerId('selected_location'),
+          position: position,
+          draggable: true,
+          infoWindow: const InfoWindow(title: 'Lokasi Cerita'),
+          onDragEnd: (newPosition) {
+            setState(() {
+              _selectedLocation = newPosition;
+            });
+          },
+        ),
+      );
+    });
+  }
+
+  Future<void> _getCurrentLocation() async {
+    setState(() => _isGettingLocation = true);
+
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        Fluttertoast.showToast(msg: "Lokasi tidak aktif. Aktifkan dulu ya!");
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          Fluttertoast.showToast(msg: "Izin lokasi ditolak");
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        Fluttertoast.showToast(msg: "Izin lokasi ditolak permanen, buka pengaturan");
+        await Geolocator.openAppSettings();
+        return;
+      }
+
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      final latLng = LatLng(position.latitude, position.longitude);
+
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      String? address;
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
+        address = "${place.street}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea}";
+      }
+
+      setState(() {
+        _selectedLocation = latLng;
+        _selectedAddress = address ?? "Alamat tidak ditemukan";
+        _markers.clear();
+        _markers.add(
+          Marker(
+            markerId: const MarkerId('current'),
+            position: latLng,
+            draggable: true,
+            infoWindow: InfoWindow(title: "Lokasi Saat Ini", snippet: address),
+            onDragEnd: (newPos) {
+              setState(() {
+                _selectedLocation = newPos;
+                _selectedAddress = null;
+              });
+            },
+          ),
+        );
+      });
+
+      // Animasi kamera ke lokasi
+      final controller = await _controller.future;
+      controller.animateCamera(CameraUpdate.newLatLngZoom(latLng, 15));
+    } catch (e) {
+      log("Error geolocation: $e");
+      Fluttertoast.showToast(msg: "Gagal mendapatkan lokasi: $e");
+    } finally {
+      setState(() => _isGettingLocation = false);
+    }
   }
 
   Future<void> _onImageButtonPressed(ImageSource source, {required BuildContext context}) async {
     try {
-      final XFile? pickedFile = await _picker.pickImage(
-        source: source,
-        // maxWidth: maxWidth,
-        // maxHeight: maxHeight,
-        // imageQuality: quality,
-      );
+      final XFile? pickedFile = await _picker.pickImage(source: source);
+      if (pickedFile == null) return;
 
-      // File file = File(pickedFile?.path ?? '');
+      final file = File(pickedFile.path);
+      var compressed = await imageCompressor(file, maxSize: 1);
 
-      final length = await pickedFile?.length() ?? -1;
-
-      if (pickedFile != null && (length != -1)) {
-        final file = File(pickedFile.path);
-
-        var compressedImage = await imageCompressor(file, maxSize: 1);
-        log("Masuk Pak Eko");
-        print("Masuk Pak Eko");
-        setState(() {
-          _setImageFileListFromFile(compressedImage);
-        });
-      }
-    } catch (e) {
       setState(() {
-        _pickImageError = e;
-        log("Ini error: $_pickImageError");
-        print("Ini error: $_pickImageError");
+        _mediaFileList = [compressed];
       });
+    } catch (e) {
+      setState(() => _pickImageError = e);
+      log("Pick image error: $e");
     }
   }
-
-  final Completer<GoogleMapController> _controller = Completer<GoogleMapController>();
-
-  static const CameraPosition _kGooglePlex = CameraPosition(
-    target: LatLng(37.42796133580664, -122.085749655962),
-    zoom: 14.4746,
-  );
-
-  static const CameraPosition _kLake = CameraPosition(
-    bearing: 192.8334901395799,
-    target: LatLng(37.43296265331129, -122.08832357078792),
-    tilt: 59.440717697143555,
-    zoom: 19.151926040649414,
-  );
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add New Story')),
+      appBar: AppBar(title: const Text('Buat Cerita Baru')),
       body: SingleChildScrollView(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 300),
-            child: Form(
-              key: formKey,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: formKey,
+            child: Container(
+              padding: EdgeInsets.only(bottom: MediaQuery.of(context).size.height / 4),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 8),
                   TextFormField(
                     controller: descriptionController,
-                    decoration: const InputDecoration(hintText: "Description"),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your story.';
-                      }
-                      return null;
-                    },
+                    decoration: const InputDecoration(
+                      labelText: "Deskripsi cerita",
+                      border: OutlineInputBorder(),
+                    ),
+                    minLines: 3,
+                    maxLines: 5,
+                    validator: (v) => (v?.trim().isEmpty ?? true) ? 'Wajib diisi' : null,
                   ),
-                  const SizedBox(height: 8),
-                  _previewImages(),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: () async {
+                  const SizedBox(height: 16),
+
+                  if (_mediaFileList?.isNotEmpty ?? false)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(
+                        _mediaFileList!.first,
+                        height: 220,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  else
+                    Container(
+                      height: 220,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(child: Text('Belum ada gambar')),
+                    ),
+
+                  const SizedBox(height: 12),
+
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.image),
+                    label: const Text("Pilih Gambar"),
+                    onPressed: () {
                       widget.isChoosingImageSourceNotifier.value = true;
                       widget.callbackImageChosenNotifier.value = _onImageButtonPressed;
                     },
-                    child: const Text("Pilih Gambar"),
                   ),
+
+                  const SizedBox(height: 24),
+
+                  const Text("Pilih Lokasi Cerita", style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
+
+                  SizedBox(
+                    height: 300,
+                    child: GoogleMap(
+                      initialCameraPosition: _initialPosition,
+                      mapType: MapType.normal,
+                      myLocationEnabled: true,
+                      myLocationButtonEnabled: true,
+                      markers: _markers,
+                      onMapCreated: _onMapCreated,
+                      onTap: _onMapTapped,
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  if (_selectedLocation != null)
+                    Text(
+                      "Lokasi terpilih: ${_selectedLocation!.latitude.toStringAsFixed(6)}, "
+                          "${_selectedLocation!.longitude.toStringAsFixed(6)}",
+                      style: const TextStyle(fontSize: 13, color: Colors.blueGrey),
+                      textAlign: TextAlign.center,
+                    )
+                  else
+                    const Text(
+                      "Tap di peta untuk memilih lokasi",
+                      style: TextStyle(color: Colors.grey),
+                      textAlign: TextAlign.center,
+                    ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    icon: _isGettingLocation
+                        ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                        : const Icon(Icons.my_location),
+                    label: const Text("Gunakan Lokasi Saya"),
+                    onPressed: _isGettingLocation ? null : _getCurrentLocation,
+                  ),
+                  SizedBox(height: 8),
+
+                  if (_selectedAddress != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(
+                        "Alamat: $_selectedAddress",
+                        style: const TextStyle(fontSize: 14, color: Colors.blueGrey),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  const SizedBox(height: 24),
+
                   context.watch<AddStoryProvider>().isLoadingAddStory
                       ? const Center(child: CircularProgressIndicator())
                       : ElevatedButton(
-                          onPressed: () async {
-                            if (formKey.currentState!.validate()) {
-                              final Story story = Story(
-                                // name: titleController.text,
-                                description: descriptionController.text,
-                                photoUrl: _mediaFileList?.last.path,
-                              );
-                              final authRead = context.read<AddStoryProvider>();
-
-                              final result = await authRead.addStory(story);
-                              if (result) {
-                                widget.onSuccessAdd();
-                              } else {
-                                Fluttertoast.showToast(
-                                  msg: "Failed Add Story",
-                                  toastLength: Toast.LENGTH_SHORT,
-                                  gravity: ToastGravity.BOTTOM,
-                                  timeInSecForIosWeb: 1,
-                                  backgroundColor: Colors.redAccent,
-                                  textColor: Colors.white,
-                                  fontSize: 16.0,
-                                );
-                              }
-                            }
-                          },
-                          child: const Text("Add Story"),
-                        ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width,
-                    height: MediaQuery.of(context).size.width,
-                    child: GoogleMap(
-                      mapType: MapType.hybrid,
-                      initialCameraPosition: _kGooglePlex,
-                      onMapCreated: (GoogleMapController controller) {
-                        _controller.complete(controller);
-                      },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
+                    onPressed: () async {
+                      if (!formKey.currentState!.validate()) return;
+                      if (_mediaFileList == null || _mediaFileList!.isEmpty) {
+                        Fluttertoast.showToast(msg: "Pilih gambar terlebih dahulu");
+                        return;
+                      }
+                      if (_selectedLocation == null) {
+                        Fluttertoast.showToast(msg: "Pilih lokasi di peta");
+                        return;
+                      }
+
+                      final story = Story(
+                        description: descriptionController.text.trim(),
+                        photoUrl: _mediaFileList!.first.path,
+                        lat: _selectedLocation!.latitude,
+                        lon: _selectedLocation!.longitude,
+                      );
+
+                      final provider = context.read<AddStoryProvider>();
+                      final success = await provider.addStory(story);
+
+                      if (success) {
+                        widget.onSuccessAdd();
+                      } else {
+                        Fluttertoast.showToast(
+                          msg: "Gagal mengunggah cerita",
+                          backgroundColor: Colors.redAccent,
+                        );
+                      }
+                    },
+                    child: const Text("Unggah Cerita", style: TextStyle(fontSize: 16)),
                   ),
                 ],
               ),
@@ -185,69 +330,12 @@ class _AddNewStoryScreenState extends State<AddNewStoryScreen> {
           ),
         ),
       ),
-
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _goToTheLake,
-        label: const Text('To the lake!'),
-        icon: const Icon(Icons.directions_boat),
-      ),
     );
   }
 
-  Future<void> _goToTheLake() async {
-    final GoogleMapController controller = await _controller.future;
-    await controller.animateCamera(CameraUpdate.newCameraPosition(_kLake));
-  }
-
-  Text? _getRetrieveErrorWidget() {
-    if (_retrieveDataError != null) {
-      final Text result = Text(_retrieveDataError!);
-      _retrieveDataError = null;
-      return result;
-    }
-    return null;
-  }
-
-  Widget _previewImages() {
-    final Text? retrieveError = _getRetrieveErrorWidget();
-    if (retrieveError != null) {
-      return retrieveError;
-    }
-    if (_mediaFileList != null) {
-      return Semantics(
-        label: 'image_picker_example_picked_images',
-        child: ListView.builder(
-          shrinkWrap: true,
-          physics: ClampingScrollPhysics(),
-          key: UniqueKey(),
-          itemBuilder: (BuildContext context, int index) {
-            return Semantics(
-              label: 'image_picker_example_picked_image',
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  height: 300,
-                  width: 100,
-                  child: Image.file(
-                    File(_mediaFileList![index].path),
-                    errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
-                      return const Center(child: Text('This image type is not supported'));
-                    },
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-            );
-          },
-          itemCount: _mediaFileList!.length,
-        ),
-      );
-    } else if (_pickImageError != null) {
-      return Text('Pick image error: $_pickImageError', textAlign: TextAlign.center);
-    } else {
-      return const Text('You have not yet picked an image.', textAlign: TextAlign.center);
-    }
+  @override
+  void dispose() {
+    descriptionController.dispose();
+    super.dispose();
   }
 }
-
-typedef OnPickImageCallback = void Function(double? maxWidth, double? maxHeight, int? quality, int? limit);

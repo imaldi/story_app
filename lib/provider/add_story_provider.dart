@@ -23,7 +23,10 @@ class AddStoryProvider extends ChangeNotifier {
 
       final result = await _apiServices.addNewStory(
           description: story.description ?? "",
-          photoPath: story.photoUrl ?? "");
+          photoPath: story.photoUrl ?? "",
+          lat: story.latitude,
+          lon: story.longitude,
+      );
 
       if (!result) {
         _addStoryResultState = AddStoryErrorState("Failed add story");
@@ -48,7 +51,10 @@ class AddStoryProvider extends ChangeNotifier {
 
       final result = await _apiServices.addNewStory(
           description: story.description ?? "",
-          photoPath: story.photoUrl ?? "");
+          photoPath: story.photoUrl ?? "",
+          lat: story.latitude,
+          lon: story.longitude,
+      );
 
       if (!result) {
         _addStoryResultState = AddStoryErrorState("Failed Add Story");

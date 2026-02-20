@@ -73,7 +73,6 @@ class StoryApiServices {
 
   Future<bool> addNewStory({
     required String description,
-    // TODO nanti akalin gimana bisa dapat filenya dari sini
     required String photoPath,
     double? lat,
     double? lon,
@@ -104,6 +103,8 @@ class StoryApiServices {
 
       if (lat != null) request.fields['lat'] = lat.toString();
       if (lon != null) request.fields['lon'] = lon.toString();
+
+      print("Request fields: ${request.fields}");
 
       // Add file to request
       request.files.add(await http.MultipartFile.fromPath('photo', photoPath, filename: photoPath.split('/').last));
