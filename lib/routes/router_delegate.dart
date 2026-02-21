@@ -77,6 +77,10 @@ class MyRouterDelegate extends RouterDelegate<PageConfiguration>
           MaterialPage(
             key: const ValueKey("RegisterPage"),
             child: RegisterScreen(
+              onPop: () {
+                isAddingNewStory = false;
+                notifyListeners();
+              },
               onRegister: () {
                 isRegister = false;
                 notifyListeners();
@@ -120,7 +124,6 @@ class MyRouterDelegate extends RouterDelegate<PageConfiguration>
           MaterialPage(
             key: ValueKey("AddNewStoryPage"),
             child: AddNewStoryScreen(
-
               onPop: () {
                 isAddingNewStory = false;
                 notifyListeners();

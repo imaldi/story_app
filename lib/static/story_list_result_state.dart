@@ -1,20 +1,36 @@
 import 'package:story_app/model/story_response.dart';
 
-/// mayvbe perlu freezed?
 sealed class StoryListResultState {}
 
 class StoryListNoneState extends StoryListResultState {}
 
-class StoryListLoadingState extends StoryListResultState {}
+class StoryListInitialLoading extends StoryListResultState {}
 
-class StoryListErrorState extends StoryListResultState {
-  final String error;
+class StoryListLoaded extends StoryListResultState {
+  final List<Story> data;
+  final bool isLoadingMore;
+  final bool hasReachedEnd;
 
-  StoryListErrorState(this.error);
+  StoryListLoaded({
+    required this.data,
+    this.isLoadingMore = false,
+    this.hasReachedEnd = false,
+  });
+
+  StoryListLoaded copyWith({
+    List<Story>? data,
+    bool? isLoadingMore,
+    bool? hasReachedEnd,
+  }) {
+    return StoryListLoaded(
+      data: data ?? this.data,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      hasReachedEnd: hasReachedEnd ?? this.hasReachedEnd,
+    );
+  }
 }
 
-class StoryListLoadedState extends StoryListResultState {
-  final List<Story> data;
-
-  StoryListLoadedState(this.data);
+class StoryListError extends StoryListResultState {
+  final String message;
+  StoryListError(this.message);
 }
