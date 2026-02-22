@@ -78,7 +78,7 @@ class MyRouterDelegate extends RouterDelegate<PageConfiguration>
             key: const ValueKey("RegisterPage"),
             child: RegisterScreen(
               onPop: () {
-                isAddingNewStory = false;
+                isRegister = false;
                 notifyListeners();
               },
               onRegister: () {
@@ -166,18 +166,16 @@ class MyRouterDelegate extends RouterDelegate<PageConfiguration>
 
   @override
   Widget build(BuildContext context) {
-    // final colorCode = _colorCodeNotifier.value;
-    // final shapeBorderType = _shapeBorderTypeNotifier.value;
     if (isUnknown == true) {
       historyStack = _unknownStack;
     } else if (isLoggedIn == null) {
       historyStack = _splashStack;
     } else if (isLoggedIn == true) {
-      historyStack = _loggedInStack(
-          context);
+      historyStack = _loggedInStack(context);
     } else {
       historyStack = _loggedOutStack;
     }
+
     return Navigator(
       key: navigatorKey,
       pages: _unknownStateNotifier.value == true
